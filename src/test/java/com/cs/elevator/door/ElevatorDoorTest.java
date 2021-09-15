@@ -30,23 +30,21 @@ class ElevatorDoorTest {
     @Mock
     private ElevatorDoorEventListener elevatorDoorEventListener;
 
-    private ElevatorDoor door;
     private Elevator elevator;
     private ElevatorDoorControlPanel controlPanel;
     private ElevatorDoorHardwareAdapter.Signals hardwareSignals;
 
     @BeforeEach
     public void initElevator() {
-        door = new ElevatorDoor(elevatorDoorHardwareCommands);
-        door.registerElevatorDoorEventListener(elevatorDoorEventListener);
-        elevator = new Elevator(door);
+        elevator = new Elevator(elevatorDoorHardwareCommands);
+        elevator.registerElevatorDoorEventListener(elevatorDoorEventListener);
         controlPanel = elevator;
         hardwareSignals = elevator;
     }
 
     @Test
     public void testElevatorInitializedWithClosedDoor() {
-        assertThat(door.currentState(), is(CLOSED));
+        assertThat(elevator.currentElevatorDoorState(), is(CLOSED));
         assertThat(elevator, is(instanceOf(ElevatorDoorControlPanel.class)));
         assertThat(elevator, is(instanceOf(ElevatorDoorHardwareAdapter.Signals.class)));
     }
@@ -57,7 +55,7 @@ class ElevatorDoorTest {
 
         controlPanel.openElevatorDoor();
 
-        assertThat(door.currentState(), is(OPEN));
+        assertThat(elevator.currentElevatorDoorState(), is(OPEN));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
         verify(elevatorDoorEventListener, times(2)).onDoorStatusChange(stateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> stateChangeEvents = stateChangeEvent.getAllValues();
@@ -72,7 +70,7 @@ class ElevatorDoorTest {
 
         controlPanel.closeElevatorDoor();
 
-        assertThat(door.currentState(), is(CLOSED));
+        assertThat(elevator.currentElevatorDoorState(), is(CLOSED));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
         verify(elevatorDoorEventListener, times(2)).onDoorStatusChange(stateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> stateChangeEvents = stateChangeEvent.getAllValues();
@@ -86,7 +84,7 @@ class ElevatorDoorTest {
 
         controlPanel.closeElevatorDoor();
 
-        assertThat(door.currentState(), is(OPENING));
+        assertThat(elevator.currentElevatorDoorState(), is(OPENING));
         verify(elevatorDoorEventListener, times(0)).onDoorStatusChange(any(ElevatorDoorStateChangeEvent.class));
     }
 
@@ -97,7 +95,7 @@ class ElevatorDoorTest {
 
         controlPanel.openElevatorDoor();
 
-        assertThat(door.currentState(), is(OPEN));
+        assertThat(elevator.currentElevatorDoorState(), is(OPEN));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
         verify(elevatorDoorEventListener, times(2)).onDoorStatusChange(stateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> stateChangeEvents = stateChangeEvent.getAllValues();
@@ -112,7 +110,7 @@ class ElevatorDoorTest {
 
         hardwareSignals.obstacleDetected();
 
-        assertThat(door.currentState(), is(OPEN));
+        assertThat(elevator.currentElevatorDoorState(), is(OPEN));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
         verify(elevatorDoorEventListener, times(2)).onDoorStatusChange(stateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> stateChangeEvents = stateChangeEvent.getAllValues();

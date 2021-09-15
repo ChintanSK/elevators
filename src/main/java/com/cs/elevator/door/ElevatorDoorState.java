@@ -4,15 +4,7 @@ import static com.cs.elevator.door.ElevatorDoorState.ElevatorDoorStates.*;
 
 public class ElevatorDoorState {
 
-    private ElevatorDoorStates currentState;
-
-    public ElevatorDoorState() {
-        this(CLOSED);
-    }
-
-    public ElevatorDoorState(ElevatorDoorStates initialState) {
-        this.currentState = initialState;
-    }
+    private ElevatorDoorStates currentState = CLOSED;
 
     public ElevatorDoorStates currentState() {
         return currentState;
@@ -50,19 +42,8 @@ public class ElevatorDoorState {
         }
 
         @Override
-        public boolean equals(Object event) {
-            if (this == event) return true;
-            if (event == null || getClass() != event.getClass()) return false;
-            ElevatorDoorStateChangeEvent that = (ElevatorDoorStateChangeEvent) event;
-            return oldState == that.oldState &&
-                    newState == that.newState;
-        }
-
-        @Override
         public String toString() {
-            return "State Change" +
-                    " from " + oldState +
-                    " to " + newState;
+            return "State Change" + " from " + oldState + " to " + newState;
         }
     }
 }

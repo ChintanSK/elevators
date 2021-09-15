@@ -1,6 +1,9 @@
 package com.cs.elevator;
 
 import com.cs.elevator.door.ElevatorDoor;
+import com.cs.elevator.door.ElevatorDoorEventListener;
+import com.cs.elevator.door.ElevatorDoorState;
+import com.cs.elevator.door.ElevatorDoorState.ElevatorDoorStates;
 import com.cs.elevator.door.hardware.ElevatorDoorControlPanel;
 import com.cs.elevator.door.hardware.ElevatorDoorHardwareAdapter;
 
@@ -10,8 +13,16 @@ public class Elevator implements ElevatorDoorControlPanel, ElevatorDoorHardwareA
 
     private final ElevatorDoor door;
 
-    public Elevator(ElevatorDoor door) {
-        this.door = door;
+    public Elevator(ElevatorDoorHardwareAdapter.Commands hardwareCommands) {
+        this.door = new ElevatorDoor(hardwareCommands);
+    }
+
+    public void registerElevatorDoorEventListener(ElevatorDoorEventListener elevatorDoorEventListener) {
+        door.registerElevatorDoorEventListener(elevatorDoorEventListener);
+    }
+
+    public ElevatorDoorStates currentElevatorDoorState() {
+        return door.currentState();
     }
 
     @Override
