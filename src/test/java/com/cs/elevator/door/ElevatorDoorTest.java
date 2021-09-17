@@ -45,7 +45,7 @@ class ElevatorDoorTest {
     @Test
     public void testElevatorInitializedWithClosedDoor() {
         assertThat(elevator.currentElevatorDoorState(), is(CLOSED));
-        assertThat(elevator, is(instanceOf(ElevatorButtonPanelAdapter.class)));
+        assertThat(elevator, is(instanceOf(ElevatorButtonPanelAdapter.DoorButtons.class)));
         assertThat(elevator, is(instanceOf(ElevatorHardwareAdapter.DoorSignals.class)));
     }
 
