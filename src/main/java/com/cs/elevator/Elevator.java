@@ -2,19 +2,18 @@ package com.cs.elevator;
 
 import com.cs.elevator.door.ElevatorDoor;
 import com.cs.elevator.door.ElevatorDoorEventListener;
-import com.cs.elevator.door.ElevatorDoorState;
 import com.cs.elevator.door.ElevatorDoorState.ElevatorDoorStates;
-import com.cs.elevator.door.hardware.ElevatorDoorControlPanel;
-import com.cs.elevator.door.hardware.ElevatorDoorHardwareAdapter;
+import com.cs.elevator.door.hardware.ElevatorButtonPanelAdapter;
+import com.cs.elevator.door.hardware.ElevatorHardwareAdapter;
 
 import static com.cs.elevator.door.ElevatorDoorState.ElevatorDoorStates.*;
 
-public class Elevator implements ElevatorDoorControlPanel, ElevatorDoorHardwareAdapter.Signals {
+public class Elevator implements ElevatorButtonPanelAdapter.DoorButtons, ElevatorHardwareAdapter.DoorSignals {
 
     private final ElevatorDoor door;
 
-    public Elevator(ElevatorDoorHardwareAdapter.Commands hardwareCommands) {
-        this.door = new ElevatorDoor(hardwareCommands);
+    public Elevator(ElevatorHardwareAdapter.DoorCommands doorHardwareCommands) {
+        this.door = new ElevatorDoor(doorHardwareCommands);
     }
 
     public void registerElevatorDoorEventListener(ElevatorDoorEventListener elevatorDoorEventListener) {
@@ -26,14 +25,14 @@ public class Elevator implements ElevatorDoorControlPanel, ElevatorDoorHardwareA
     }
 
     @Override
-    public void openElevatorDoor() {
+    public void openDoorButtonPressed() {
         if (door.isClosed() || door.isClosing()) {
             door.open();
         }
     }
 
     @Override
-    public void closeElevatorDoor() {
+    public void closeDoorButtonPressed() {
         if (door.isOpen()) {
             door.close();
         }

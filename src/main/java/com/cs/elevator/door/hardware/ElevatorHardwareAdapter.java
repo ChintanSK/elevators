@@ -1,13 +1,13 @@
 package com.cs.elevator.door.hardware;
 
-public interface ElevatorDoorHardwareAdapter {
-    interface Commands {
+public interface ElevatorHardwareAdapter {
+    interface DoorCommands {
         void open();
 
         void close();
     }
 
-    interface Signals {
+    interface DoorSignals {
         void doorIsOpening();
 
         void doorOpened();

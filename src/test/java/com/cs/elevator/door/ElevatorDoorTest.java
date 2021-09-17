@@ -2,8 +2,8 @@ package com.cs.elevator.door;
 
 import com.cs.elevator.Elevator;
 import com.cs.elevator.door.ElevatorDoorState.ElevatorDoorStateChangeEvent;
-import com.cs.elevator.door.hardware.ElevatorDoorControlPanel;
-import com.cs.elevator.door.hardware.ElevatorDoorHardwareAdapter;
+import com.cs.elevator.door.hardware.ElevatorButtonPanelAdapter;
+import com.cs.elevator.door.hardware.ElevatorHardwareAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,35 +25,35 @@ import static org.mockito.Mockito.*;
 class ElevatorDoorTest {
 
     @Mock
-    private ElevatorDoorHardwareAdapter.Commands elevatorDoorHardwareCommands;
+    private ElevatorHardwareAdapter.DoorCommands doorHardwareCommands;
 
     @Mock
     private ElevatorDoorEventListener elevatorDoorEventListener;
 
     private Elevator elevator;
-    private ElevatorDoorControlPanel controlPanel;
-    private ElevatorDoorHardwareAdapter.Signals hardwareSignals;
+    private ElevatorButtonPanelAdapter.DoorButtons controlPanel;
+    private ElevatorHardwareAdapter.DoorSignals doorHardwareSignals;
 
     @BeforeEach
     public void initElevator() {
-        elevator = new Elevator(elevatorDoorHardwareCommands);
+        elevator = new Elevator(doorHardwareCommands);
         elevator.registerElevatorDoorEventListener(elevatorDoorEventListener);
         controlPanel = elevator;
-        hardwareSignals = elevator;
+        doorHardwareSignals = elevator;
     }
 
     @Test
     public void testElevatorInitializedWithClosedDoor() {
         assertThat(elevator.currentElevatorDoorState(), is(CLOSED));
-        assertThat(elevator, is(instanceOf(ElevatorDoorControlPanel.class)));
-        assertThat(elevator, is(instanceOf(ElevatorDoorHardwareAdapter.Signals.class)));
+        assertThat(elevator, is(instanceOf(ElevatorButtonPanelAdapter.DoorButtons.class)));
+        assertThat(elevator, is(instanceOf(ElevatorHardwareAdapter.DoorSignals.class)));
     }
 
     @Test
     public void testOpenButtonPressedOnElevatorDoorControlPanel() {
         setUpDoorOpenAction();
 
-        controlPanel.openElevatorDoor();
+        controlPanel.openDoorButtonPressed();
 
         assertThat(elevator.currentElevatorDoorState(), is(OPEN));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
@@ -68,7 +68,7 @@ class ElevatorDoorTest {
         setUpAnOpenDoor();
         setUpDoorClosedAction();
 
-        controlPanel.closeElevatorDoor();
+        controlPanel.closeDoorButtonPressed();
 
         assertThat(elevator.currentElevatorDoorState(), is(CLOSED));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
@@ -82,7 +82,7 @@ class ElevatorDoorTest {
     public void testCloseButtonPressHasNoImpactWhenElevatorDoorIsOpening() {
         setUpAnOpeningDoor();
 
-        controlPanel.closeElevatorDoor();
+        controlPanel.closeDoorButtonPressed();
 
         assertThat(elevator.currentElevatorDoorState(), is(OPENING));
         verify(elevatorDoorEventListener, times(0)).onDoorStatusChange(any(ElevatorDoorStateChangeEvent.class));
@@ -93,7 +93,7 @@ class ElevatorDoorTest {
         setUpAClosingDoor();
         setUpDoorOpenAction();
 
-        controlPanel.openElevatorDoor();
+        controlPanel.openDoorButtonPressed();
 
         assertThat(elevator.currentElevatorDoorState(), is(OPEN));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
@@ -108,7 +108,7 @@ class ElevatorDoorTest {
         setUpAClosingDoor();
         setUpDoorOpenAction();
 
-        hardwareSignals.obstacleDetected();
+        doorHardwareSignals.obstacleDetected();
 
         assertThat(elevator.currentElevatorDoorState(), is(OPEN));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
@@ -120,34 +120,34 @@ class ElevatorDoorTest {
 
     private void setUpDoorOpenAction() {
         doAnswer(invocation -> {
-            hardwareSignals.doorIsOpening();
-            hardwareSignals.doorOpened();
+            doorHardwareSignals.doorIsOpening();
+            doorHardwareSignals.doorOpened();
             return null;
-        }).when(elevatorDoorHardwareCommands).open();
+        }).when(doorHardwareCommands).open();
     }
 
     private void setUpDoorClosedAction() {
         doAnswer(invocation -> {
-            hardwareSignals.doorIsClosing();
-            hardwareSignals.doorClosed();
+            doorHardwareSignals.doorIsClosing();
+            doorHardwareSignals.doorClosed();
             return null;
-        }).when(elevatorDoorHardwareCommands).close();
+        }).when(doorHardwareCommands).close();
     }
 
     private void setUpAnOpeningDoor() {
-        hardwareSignals.doorIsOpening();
+        doorHardwareSignals.doorIsOpening();
         clearInvocations(elevatorDoorEventListener);
     }
 
     private void setUpAnOpenDoor() {
         setUpDoorOpenAction();
-        controlPanel.openElevatorDoor();
-        clearInvocations(elevatorDoorHardwareCommands);
+        controlPanel.openDoorButtonPressed();
+        clearInvocations(doorHardwareCommands);
         clearInvocations(elevatorDoorEventListener);
     }
 
     private void setUpAClosingDoor() {
-        hardwareSignals.doorIsClosing();
+        doorHardwareSignals.doorIsClosing();
         clearInvocations(elevatorDoorEventListener);
     }
 }
