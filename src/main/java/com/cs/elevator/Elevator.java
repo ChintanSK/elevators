@@ -1,18 +1,27 @@
 package com.cs.elevator;
 
+import com.cs.elevator.ElevatorState.ElevatorStates;
 import com.cs.elevator.door.ElevatorDoor;
 import com.cs.elevator.door.ElevatorDoorEventListener;
 import com.cs.elevator.door.ElevatorDoorState.ElevatorDoorStates;
-import com.cs.elevator.door.hardware.ElevatorButtonPanelAdapter;
-import com.cs.elevator.door.hardware.ElevatorHardwareAdapter;
+import com.cs.elevator.hardware.ElevatorButtonPanel;
+import com.cs.elevator.hardware.ElevatorButtonPanelAdapter;
+import com.cs.elevator.hardware.ElevatorHardware;
+import com.cs.elevator.hardware.ElevatorHardware.DoorSignalsAdapter;
+import com.cs.elevator.hardware.ElevatorHardware.ElevatorSignalsAdapter;
 
+import static com.cs.elevator.ElevatorState.ElevatorStates.*;
 import static com.cs.elevator.door.ElevatorDoorState.ElevatorDoorStates.*;
 
-public class Elevator implements ElevatorButtonPanelAdapter.DoorButtons, ElevatorHardwareAdapter.DoorSignals {
+public class Elevator implements DoorSignalsAdapter, ElevatorSignalsAdapter {
 
-    private final ElevatorDoor door;
+    public final ElevatorState elevatorState = new ElevatorState();
+    public final ElevatorButtonPanelAdapter buttonPanel = new ElevatorButtonPanel(this);
+    public final ElevatorDoor door;
+    public final ElevatorRequests requests = new ElevatorRequests();
+    private String currentStorey;
 
-    public Elevator(ElevatorHardwareAdapter.DoorCommands doorHardwareCommands) {
+    public Elevator(ElevatorHardware.DoorCommandsAdapter doorHardwareCommands) {
         this.door = new ElevatorDoor(doorHardwareCommands);
     }
 
@@ -20,21 +29,21 @@ public class Elevator implements ElevatorButtonPanelAdapter.DoorButtons, Elevato
         door.registerElevatorDoorEventListener(elevatorDoorEventListener);
     }
 
-    public ElevatorDoorStates currentElevatorDoorState() {
+    public String currentStorey() {
+        return currentStorey;
+    }
+
+    public ElevatorStates currentElevatorState() {
+        return elevatorState.currentState();
+    }
+
+    public ElevatorDoorStates currentDoorState() {
         return door.currentState();
     }
 
-    @Override
-    public void openDoorButtonPressed() {
-        if (door.isClosed() || door.isClosing()) {
+    public void openDoor() {
+        if (!elevatorState.isMoving()) {
             door.open();
-        }
-    }
-
-    @Override
-    public void closeDoorButtonPressed() {
-        if (door.isOpen()) {
-            door.close();
         }
     }
 
@@ -55,7 +64,7 @@ public class Elevator implements ElevatorButtonPanelAdapter.DoorButtons, Elevato
 
     @Override
     public void obstacleDetected() {
-        door.open();
+        openDoor();
     }
 
     @Override
@@ -63,4 +72,30 @@ public class Elevator implements ElevatorButtonPanelAdapter.DoorButtons, Elevato
         door.changeStateTo(CLOSED);
     }
 
+    @Override
+    public void elevatorStationary(String storey) {
+        currentStorey = storey;
+        elevatorState.changeTo(STATIONARY);
+    }
+
+    @Override
+    public void elevatorMovingUp() {
+        elevatorState.changeTo(MOVING_UP);
+    }
+
+    @Override
+    public void elevatorMovingDown() {
+        elevatorState.changeTo(MOVING_UP);
+    }
+
+    @Override
+    public void elevatorApproachingStorey(String storey) {
+        // check if the coming storey needs to be serviced.
+        // if so then send command to slow down.
+    }
+
+    @Override
+    public void elevatorSlowingDown() {
+        elevatorState.changeTo(SLOWING);
+    }
 }
