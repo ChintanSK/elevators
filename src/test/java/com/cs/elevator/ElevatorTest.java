@@ -15,11 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static com.cs.elevator.ElevatorState.ElevatorStates.MOVING_UP;
-import static com.cs.elevator.ElevatorState.ElevatorStates.STATIONARY;
+import static com.cs.elevator.ElevatorState.ElevatorStates.*;
 import static com.cs.elevator.door.ElevatorDoorState.ElevatorDoorStates.*;
 import static com.cs.elevator.door.ElevatorDoorStateTransitionMatcher.*;
-import static com.cs.elevator.door.ElevatorDoorStateTransitionMatcher.to;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.is;
@@ -56,7 +54,7 @@ class ElevatorTest {
     @DisplayName("When button pressed for ground floor while the elevator is stationed at ground floor, then the door opens")
     public void testGroundButtonPressedWhileElevatorStationedAtGroundLevel() {
         setUpDoorOpenAction();
-        elevator.elevatorStationary("GROUND");
+        elevatorHardwareSignals.elevatorStationary("GROUND");
 
         elevator.buttonPanel.buttonPressed("GROUND");
 
@@ -73,7 +71,7 @@ class ElevatorTest {
     @Test
     @DisplayName("Elevator records all the requests made from within the Elevator by button presses")
     public void testElevatorRecordsElevatorRequests() {
-        elevator.elevatorStationary("GROUND");
+        elevatorHardwareSignals.elevatorStationary("GROUND");
 
         elevator.buttonPanel.buttonPressed("1");
         elevator.buttonPanel.buttonPressed("2");

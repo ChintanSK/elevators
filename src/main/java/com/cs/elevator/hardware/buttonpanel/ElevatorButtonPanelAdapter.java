@@ -1,4 +1,4 @@
-package com.cs.elevator.hardware;
+package com.cs.elevator.hardware.buttonpanel;
 
 @FunctionalInterface
 public interface ElevatorButtonPanelAdapter {
