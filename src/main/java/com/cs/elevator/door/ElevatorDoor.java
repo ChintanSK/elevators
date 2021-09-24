@@ -1,56 +1,66 @@
 package com.cs.elevator.door;
 
-import com.cs.elevator.door.ElevatorDoorState.ElevatorDoorStateChangeEvent;
-import com.cs.elevator.door.ElevatorDoorState.ElevatorDoorStates;
-import com.cs.elevator.hardware.ElevatorHardware;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
+
+import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.*;
 
 public class ElevatorDoor {
     private final List<ElevatorDoorEventListener> elevatorDoorEventListeners = new ArrayList<>();
-    private final ElevatorDoorState currentState = new ElevatorDoorState();
-    private final ElevatorHardware.DoorCommandsAdapter doorHardwareCommands;
+    private final ElevatorDoorState state = new ElevatorDoorState(CLOSED);
 
-    public ElevatorDoor(ElevatorHardware.DoorCommandsAdapter doorHardwareCommands) {
-        this.doorHardwareCommands = Objects.requireNonNull(doorHardwareCommands, "The hardware adapter taking commands from ElevatorDoor cannot be null");
-    }
-
-    public final boolean registerElevatorDoorEventListener(ElevatorDoorEventListener elevatorDoorEventListener) {
-        return elevatorDoorEventListeners.add(elevatorDoorEventListener);
+    public void registerElevatorDoorEventListener(ElevatorDoorEventListener elevatorDoorEventListener) {
+        elevatorDoorEventListeners.add(elevatorDoorEventListener);
     }
 
     public void changeStateTo(ElevatorDoorStates newState) {
-        emitStateChangeEvent(currentState.changeTo(newState));
+        emitStateChangeEvent(new ElevatorDoorStateChangeEvent(state.currentState, newState));
+        state.changeTo(newState);
     }
 
     private void emitStateChangeEvent(ElevatorDoorStateChangeEvent stateChangeEvent) {
         elevatorDoorEventListeners.forEach(listener -> listener.onDoorStatusChange(stateChangeEvent));
     }
 
+    public boolean isOpening() {
+        return state.currentState.equals(OPENING);
+    }
+
     public boolean isOpen() {
-        return currentState.isOpen();
+        return state.currentState.equals(OPEN);
     }
 
     public boolean isClosing() {
-        return currentState.isClosing();
+        return state.currentState.equals(CLOSING);
     }
 
     public boolean isClosed() {
-        return currentState.isClosed();
+        return state.currentState.equals(CLOSED);
     }
 
-    public ElevatorDoorStates currentState() {
-        return currentState.currentState();
+    public enum ElevatorDoorStates {
+        OPEN, OPENING, CLOSED, CLOSING
     }
 
-    public void close() {
-        doorHardwareCommands.close();
+    public static class ElevatorDoorState {
+        private ElevatorDoorStates currentState;
+
+        public ElevatorDoorState(ElevatorDoorStates initialState) {
+            currentState = initialState;
+        }
+
+        public void changeTo(ElevatorDoorStates newState) {
+            currentState = newState;
+        }
     }
 
-    public void open() {
-        doorHardwareCommands.open();
-    }
+    public static class ElevatorDoorStateChangeEvent {
+        public final ElevatorDoorStates oldState;
+        public final ElevatorDoorStates newState;
 
+        public ElevatorDoorStateChangeEvent(ElevatorDoorStates oldState, ElevatorDoorStates newState) {
+            this.oldState = oldState;
+            this.newState = newState;
+        }
+    }
 }

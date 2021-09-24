@@ -5,30 +5,30 @@ import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeMatcher;
 import org.hamcrest.core.IsEqual;
 
-public final class ElevatorDoorStateTransitionMatcher extends TypeSafeMatcher<ElevatorDoorState.ElevatorDoorStateChangeEvent> {
+public final class ElevatorDoorStateTransitionMatcher extends TypeSafeMatcher<ElevatorDoor.ElevatorDoorStateChangeEvent> {
 
-    private final Matcher<ElevatorDoorState.ElevatorDoorStates> oldStateMatcher;
-    private final Matcher<ElevatorDoorState.ElevatorDoorStates> newStateMatcher;
+    private final Matcher<ElevatorDoor.ElevatorDoorStates> oldStateMatcher;
+    private final Matcher<ElevatorDoor.ElevatorDoorStates> newStateMatcher;
 
-    public ElevatorDoorStateTransitionMatcher(Matcher<ElevatorDoorState.ElevatorDoorStates> oldStateMatcher, Matcher<ElevatorDoorState.ElevatorDoorStates> newStateMatcher) {
+    public ElevatorDoorStateTransitionMatcher(Matcher<ElevatorDoor.ElevatorDoorStates> oldStateMatcher, Matcher<ElevatorDoor.ElevatorDoorStates> newStateMatcher) {
         this.oldStateMatcher = oldStateMatcher;
         this.newStateMatcher = newStateMatcher;
     }
 
-    public static ElevatorDoorStateTransitionMatcher transitioning(Matcher<ElevatorDoorState.ElevatorDoorStates> oldStateMatcher, Matcher<ElevatorDoorState.ElevatorDoorStates> newStateMatcher) {
+    public static ElevatorDoorStateTransitionMatcher transitioning(Matcher<ElevatorDoor.ElevatorDoorStates> oldStateMatcher, Matcher<ElevatorDoor.ElevatorDoorStates> newStateMatcher) {
         return new ElevatorDoorStateTransitionMatcher(oldStateMatcher, newStateMatcher);
     }
 
-    public static Matcher<ElevatorDoorState.ElevatorDoorStates> from(ElevatorDoorState.ElevatorDoorStates oldState) {
+    public static Matcher<ElevatorDoor.ElevatorDoorStates> from(ElevatorDoor.ElevatorDoorStates oldState) {
         return new IsEqual<>(oldState);
     }
 
-    public static Matcher<ElevatorDoorState.ElevatorDoorStates> to(ElevatorDoorState.ElevatorDoorStates newState) {
+    public static Matcher<ElevatorDoor.ElevatorDoorStates> to(ElevatorDoor.ElevatorDoorStates newState) {
         return new IsEqual<>(newState);
     }
 
     @Override
-    protected boolean matchesSafely(ElevatorDoorState.ElevatorDoorStateChangeEvent actualEvent) {
+    protected boolean matchesSafely(ElevatorDoor.ElevatorDoorStateChangeEvent actualEvent) {
         return oldStateMatcher.matches(actualEvent.oldState) && newStateMatcher.matches(actualEvent.newState);
     }
 

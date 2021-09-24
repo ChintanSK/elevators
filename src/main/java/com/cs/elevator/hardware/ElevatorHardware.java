@@ -1,16 +1,20 @@
 package com.cs.elevator.hardware;
 
 public interface ElevatorHardware {
+    interface ElevatorCommandsAdapter {
+        void stop();
+
+        void moveUp();
+
+        void moveDown();
+    }
+
     interface ElevatorSignalsAdapter {
-        void elevatorStationary(String storey);
+        void elevatorStationary(String storeyCode);
 
-        void elevatorMovingUp();
+        void elevatorMoving();
 
-        void elevatorMovingDown();
-
-        void elevatorApproachingStorey(String storey);
-
-        void elevatorSlowingDown();
+        void elevatorApproachingStorey(String storeyCode);
     }
 
     interface DoorCommandsAdapter {

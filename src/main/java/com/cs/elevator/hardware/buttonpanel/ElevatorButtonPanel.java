@@ -1,46 +1,46 @@
 package com.cs.elevator.hardware.buttonpanel;
 
-import com.cs.elevator.Elevator;
+import com.cs.elevator.service.ElevatorService;
 
 public class ElevatorButtonPanel implements ElevatorButtonPanelAdapter {
 
-    private final Elevator elevator;
+    private final ElevatorService elevatorService;
 
-    public ElevatorButtonPanel(Elevator elevator) {
-        this.elevator = elevator;
+    public ElevatorButtonPanel(ElevatorService elevatorService) {
+        this.elevatorService = elevatorService;
     }
 
     @Override
     public void buttonPressed(String buttonCode) {
         ElevatorButtonCommand elevatorButtonCommand = ElevatorButtonCommand.getByCode(buttonCode);
-        elevatorButtonCommand.executeFor(elevator);
+        elevatorButtonCommand.executeFor(elevatorService);
     }
 
 
     public interface ElevatorButtonCommand {
 
-        void executeFor(Elevator elevator);
+        void executeFor(ElevatorService elevatorService);
 
         static ElevatorButtonCommand getByCode(String buttonCode) {
             switch (buttonCode) {
                 case "OPEN":
-                    return elevator -> {
-                        if (elevator.door.isClosed() || elevator.door.isClosing()) {
-                            elevator.openDoor();
+                    return elevatorService -> {
+                        if (elevatorService.elevator.door.isClosed() || elevatorService.elevator.door.isClosing()) {
+                            elevatorService.openDoor();
                         }
                     };
                 case "CLOSE":
-                    return elevator -> {
-                        if (elevator.door.isOpen()) {
-                            elevator.door.close();
+                    return elevatorService -> {
+                        if (elevatorService.elevator.door.isOpen()) {
+                            elevatorService.doorService.close();
                         }
                     };
                 default:
-                    return elevator -> {
-                        if (elevator.elevatorState.isStationary() && elevator.currentStorey().equals(buttonCode)) {
-                            elevator.openDoor();
+                    return elevatorService -> {
+                        if (elevatorService.elevator.isStationary() && elevatorService.currentStorey().equals(buttonCode)) {
+                            elevatorService.openDoor();
                         } else {
-                            elevator.requests.add(buttonCode);
+                            elevatorService.requests.add(buttonCode);
                         }
                     };
             }

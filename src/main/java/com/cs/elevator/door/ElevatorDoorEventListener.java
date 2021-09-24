@@ -1,5 +1,5 @@
 package com.cs.elevator.door;
 
 public interface ElevatorDoorEventListener {
-    void onDoorStatusChange(ElevatorDoorState.ElevatorDoorStateChangeEvent event);
+    void onDoorStatusChange(ElevatorDoor.ElevatorDoorStateChangeEvent event);
 }
