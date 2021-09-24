@@ -1,6 +1,5 @@
-package com.cs.elevator.service;
+package com.cs.elevator.door;
 
-import com.cs.elevator.door.ElevatorDoor;
 import com.cs.elevator.hardware.ElevatorHardware.DoorCommandsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.DoorSignalsAdapter;
 

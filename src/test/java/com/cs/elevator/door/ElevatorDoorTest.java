@@ -4,7 +4,7 @@ import com.cs.elevator.Elevator;
 import com.cs.elevator.door.ElevatorDoor.ElevatorDoorStateChangeEvent;
 import com.cs.elevator.hardware.ElevatorHardware;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;
-import com.cs.elevator.service.ElevatorService;
+import com.cs.elevator.ElevatorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

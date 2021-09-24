@@ -7,7 +7,6 @@ import com.cs.elevator.hardware.ElevatorHardware.DoorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.ElevatorCommandsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.ElevatorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;
-import com.cs.elevator.service.ElevatorService;
 import com.cs.elevator.storey.Storey;
 import com.cs.elevator.storey.Storeys;
 import org.junit.jupiter.api.*;

@@ -1,8 +1,6 @@
-package com.cs.elevator.service;
+package com.cs.elevator;
 
-import com.cs.elevator.Elevator;
-import com.cs.elevator.ElevatorDirection;
-import com.cs.elevator.ElevatorRequests;
+import com.cs.elevator.door.ElevatorDoorService;
 import com.cs.elevator.hardware.ElevatorHardware.ElevatorCommandsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.ElevatorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;

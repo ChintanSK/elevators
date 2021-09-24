@@ -1,6 +1,6 @@
 package com.cs.elevator.hardware.buttonpanel;
 
-import com.cs.elevator.service.ElevatorService;
+import com.cs.elevator.ElevatorService;
 
 public class ElevatorButtonPanel implements ElevatorButtonPanelAdapter {
 
