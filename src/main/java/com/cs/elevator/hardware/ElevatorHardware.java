@@ -2,7 +2,7 @@ package com.cs.elevator.hardware;
 
 public interface ElevatorHardware {
     interface ElevatorCommandsAdapter {
-        void stop();
+        void stop(String storeyCode);
 
         void moveUp();
 
@@ -10,7 +10,7 @@ public interface ElevatorHardware {
     }
 
     interface ElevatorSignalsAdapter {
-        void elevatorStationary(String storeyCode);
+        void elevatorStopped(String storeyCode);
 
         void elevatorMoving();
 

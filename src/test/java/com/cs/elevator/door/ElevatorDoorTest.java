@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.*;
-import static com.cs.elevator.door.ElevatorDoorStateTransitionMatcher.*;
+import static com.cs.elevator.door.StateTransitionMatcher.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -76,7 +76,7 @@ class ElevatorDoorTest {
         setUpAnOpenDoor();
         setUpDoorClosedAction();
 
-        assertThat(elevator.isStationary(), is(true));
+        assertThat(elevator.isServing(), is(true));
         elevatorService.buttonPanel.buttonPressed("CLOSE");
 
         assertThat(elevator.door.isClosed(), is(true));
@@ -92,7 +92,7 @@ class ElevatorDoorTest {
     public void testCloseButtonPressHasNoImpactWhenElevatorDoorIsOpening() {
         setUpAnOpeningDoor();
 
-        assertThat(elevator.isStationary(), is(true));
+        assertThat(elevator.isServing(), is(true));
         elevatorService.buttonPanel.buttonPressed("CLOSE");
 
         assertThat(elevator.door.isOpening(), is(true));
@@ -105,7 +105,7 @@ class ElevatorDoorTest {
         setUpAClosingDoor();
         setUpDoorOpenAction();
 
-        assertThat(elevator.isStationary(), is(true));
+        assertThat(elevator.isServing(), is(true));
         elevatorService.buttonPanel.buttonPressed("OPEN");
 
         assertThat(elevator.door.isOpen(), is(true));
@@ -141,7 +141,7 @@ class ElevatorDoorTest {
         setUpAClosingDoor();
         setUpDoorOpenAction();
 
-        assertThat(elevator.isStationary(), is(true));
+        assertThat(elevator.isServing(), is(true));
         doorHardwareSignals.obstacleDetected();
 
         assertThat(elevator.door.isOpen(), is(true));

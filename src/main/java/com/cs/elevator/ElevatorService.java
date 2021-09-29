@@ -1,17 +1,18 @@
 package com.cs.elevator;
 
+import com.cs.elevator.door.ElevatorDoor;
+import com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates;
+import com.cs.elevator.door.ElevatorDoorEventListener;
 import com.cs.elevator.door.ElevatorDoorService;
 import com.cs.elevator.hardware.ElevatorHardware.ElevatorCommandsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.ElevatorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;
 import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanel;
 import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanelAdapter;
-import com.cs.elevator.storey.Storey;
 
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.concurrent.CompletableFuture;
 
-public class ElevatorService implements Runnable, ElevatorSignalsAdapter {
+public class ElevatorService implements Runnable, ElevatorSignalsAdapter, ElevatorDoorEventListener {
     public final Elevator elevator;
     public final ElevatorDoorService doorService;
     private final ElevatorCommandsAdapter elevatorHardwareCommands;
@@ -19,50 +20,14 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter {
     public final ElevatorRequests requests = new ElevatorRequests();
     public ElevatorDirection direction = ElevatorDirection.UP;
 
-    public final Set<String> storeyStops = new TreeSet<>();
     public String currentStorey;
     private boolean stopped;
 
     public ElevatorService(Elevator elevator, ElevatorHardwareCommands elevatorHardwareCommands) {
         this.elevator = elevator;
+        elevator.door.registerElevatorDoorEventListener(this);
         doorService = new ElevatorDoorService(elevator.door, elevatorHardwareCommands.doorCommands);
         this.elevatorHardwareCommands = elevatorHardwareCommands.elevatorCommands;
-    }
-
-    @Override
-    public void run() {
-        while (!stopped) {
-            try {
-                while (requests.hasNext()) {
-                    if (elevator.isStationary() && isDoorClosedLongEnough()) {
-                        Storey next = nextRequest();
-                        move(next);
-                        requests.remove(next.name);
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private boolean isDoorClosedLongEnough() throws InterruptedException {
-        boolean closedASecondAgo = elevator.door.isClosed();
-        Thread.sleep(1000L);
-        boolean stillClosed = elevator.door.isClosed();
-        return closedASecondAgo && stillClosed;
-    }
-
-    public void move(Storey storeyStop) {
-        storeyStops.add(storeyStop.name);
-        switch (direction) {
-            case UP:
-                elevatorHardwareCommands.moveUp();
-                break;
-            case DOWN:
-                elevatorHardwareCommands.moveDown();
-                break;
-        }
     }
 
     public void start() {
@@ -73,13 +38,32 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter {
         stopped = true;
     }
 
-    public Storey nextRequest() {
-        Storey next = requests.next(currentStorey, direction);
-        if (next == null) {
-            direction = direction.toggle();
-            next = requests.next(currentStorey, direction);
+    @Override
+    public void run() {
+        startAcceptingElevatorRequests();
+        while (!stopped) {
+            if (requests.hasMore() && elevator.isStationary()) {
+                if (requests.next(currentStorey, direction) == null) {
+                    direction = direction.toggle();
+                }
+                switch (direction) {
+                    case UP:
+                        elevatorHardwareCommands.moveUp();
+                        break;
+                    case DOWN:
+                        elevatorHardwareCommands.moveDown();
+                        break;
+                }
+            }
         }
-        return next;
+    }
+
+    private void startAcceptingElevatorRequests() {
+        new Thread(() -> {
+            while (!stopped) {
+                requests.serveNext();
+            }
+        }).start();
     }
 
     public String currentStorey() {
@@ -87,11 +71,11 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter {
     }
 
     @Override
-    public void elevatorStationary(String storeyCode) {
+    public void elevatorStopped(String storeyCode) {
         currentStorey = storeyCode;
-        elevator.makeStationary();
+        elevator.makeServing();
         openDoor();
-        storeyStops.remove(storeyCode);
+        requests.markAsServed(storeyCode);
     }
 
     @Override
@@ -101,8 +85,8 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter {
 
     @Override
     public void elevatorApproachingStorey(String storeyCode) {
-        if (storeyStops.contains(storeyCode)) {
-            elevatorHardwareCommands.stop();
+        if (requests.contains(storeyCode)) {
+            elevatorHardwareCommands.stop(storeyCode);
         }
     }
 
@@ -110,5 +94,27 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter {
         if (!elevator.isMoving()) {
             doorService.open();
         }
+    }
+
+    @Override
+    public void onDoorStatusChange(ElevatorDoor.ElevatorDoorStateChangeEvent event) {
+        if (ElevatorDoorStates.CLOSED.equals(event.newState())) {
+            try {
+                if (isDoorClosedLongEnough()) {
+                    elevator.makeStationary();
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            elevator.makeServing();
+        }
+    }
+
+    private boolean isDoorClosedLongEnough() throws InterruptedException {
+        boolean closedASecondAgo = elevator.door.isClosed();
+        Thread.sleep(2000L);
+        boolean stillClosed = elevator.door.isClosed();
+        return closedASecondAgo && stillClosed;
     }
 }

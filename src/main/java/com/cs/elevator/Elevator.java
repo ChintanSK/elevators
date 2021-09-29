@@ -1,11 +1,15 @@
 package com.cs.elevator;
 
 import com.cs.elevator.door.ElevatorDoor;
+import com.cs.util.StateChangeEvent;
 
-import static com.cs.elevator.Elevator.ElevatorStates.MOVING;
-import static com.cs.elevator.Elevator.ElevatorStates.STATIONARY;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.cs.elevator.Elevator.ElevatorStates.*;
 
 public class Elevator {
+    private final List<ElevatorEventListener> elevatorEventListeners = new ArrayList<>();
     public final ElevatorState state = new ElevatorState(STATIONARY);
     public final ElevatorDoor door;
 
@@ -13,12 +17,33 @@ public class Elevator {
         this.door = new ElevatorDoor();
     }
 
+    public void registerElevatorStateChangeListener(ElevatorEventListener listener) {
+        elevatorEventListeners.add(listener);
+    }
+
     public void makeStationary() {
-        state.changeTo(STATIONARY);
+        changeStateTo(STATIONARY);
     }
 
     public void makeMoving() {
-        state.changeTo(MOVING);
+        changeStateTo(MOVING);
+    }
+
+    public void makeServing() {
+        changeStateTo(SERVING);
+    }
+
+    private void changeStateTo(ElevatorStates newState) {
+        ElevatorStates oldState = state.currentState;
+        state.changeTo(newState);
+        emitStateChangeEvent(oldState, newState);
+    }
+
+    private void emitStateChangeEvent(ElevatorStates oldState, ElevatorStates newState) {
+        if (oldState != newState) {
+            ElevatorStateChangeEvent stateChangeEvent = new ElevatorStateChangeEvent(oldState, newState);
+            elevatorEventListeners.forEach(listener -> listener.onElevatorStatusChange(stateChangeEvent));
+        }
     }
 
     public final boolean isStationary() {
@@ -29,11 +54,19 @@ public class Elevator {
         return state.currentState.equals(MOVING);
     }
 
-    public enum ElevatorStates {
-        STATIONARY, MOVING
+    public final boolean isServing() {
+        return state.currentState.equals(SERVING);
     }
 
-    private static class ElevatorState {
+    public ElevatorStates currentState() {
+        return state.currentState;
+    }
+
+    public enum ElevatorStates {
+        STATIONARY, MOVING, SERVING
+    }
+
+    public static class ElevatorState {
 
         private ElevatorStates currentState;
 
@@ -43,6 +76,26 @@ public class Elevator {
 
         public void changeTo(ElevatorStates newState) {
             currentState = newState;
+        }
+    }
+
+    public static class ElevatorStateChangeEvent implements StateChangeEvent<ElevatorStates> {
+        private final ElevatorStates oldState;
+        private final ElevatorStates newState;
+
+        public ElevatorStateChangeEvent(ElevatorStates oldState, ElevatorStates newState) {
+            this.oldState = oldState;
+            this.newState = newState;
+        }
+
+        @Override
+        public ElevatorStates oldState() {
+            return oldState;
+        }
+
+        @Override
+        public ElevatorStates newState() {
+            return newState;
         }
     }
 }

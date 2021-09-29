@@ -2,7 +2,7 @@ package com.cs.elevator.storey;
 
 import java.util.Objects;
 
-public class Storey {
+public class Storey implements Comparable<Storey> {
     public final Integer number;
     public final String name;
 
@@ -27,4 +27,8 @@ public class Storey {
         return Objects.equals(number, storey.number);
     }
 
+    @Override
+    public int compareTo(Storey otherStorey) {
+        return number.compareTo(otherStorey.number);
+    }
 }

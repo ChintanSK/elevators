@@ -1,5 +1,7 @@
 package com.cs.elevator.door;
 
+import com.cs.util.StateChangeEvent;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,11 +16,13 @@ public class ElevatorDoor {
     }
 
     public void changeStateTo(ElevatorDoorStates newState) {
-        emitStateChangeEvent(new ElevatorDoorStateChangeEvent(state.currentState, newState));
+        ElevatorDoorStates oldState = state.currentState;
         state.changeTo(newState);
+        emitStateChangeEvent(oldState, newState);
     }
 
-    private void emitStateChangeEvent(ElevatorDoorStateChangeEvent stateChangeEvent) {
+    private void emitStateChangeEvent(ElevatorDoorStates oldState, ElevatorDoorStates newState) {
+        ElevatorDoorStateChangeEvent stateChangeEvent = new ElevatorDoorStateChangeEvent(oldState, newState);
         elevatorDoorEventListeners.forEach(listener -> listener.onDoorStatusChange(stateChangeEvent));
     }
 
@@ -54,13 +58,23 @@ public class ElevatorDoor {
         }
     }
 
-    public static class ElevatorDoorStateChangeEvent {
-        public final ElevatorDoorStates oldState;
-        public final ElevatorDoorStates newState;
+    public static class ElevatorDoorStateChangeEvent implements StateChangeEvent<ElevatorDoorStates> {
+        private final ElevatorDoorStates oldState;
+        private final ElevatorDoorStates newState;
 
         public ElevatorDoorStateChangeEvent(ElevatorDoorStates oldState, ElevatorDoorStates newState) {
             this.oldState = oldState;
             this.newState = newState;
+        }
+
+        @Override
+        public ElevatorDoorStates oldState() {
+            return oldState;
+        }
+
+        @Override
+        public ElevatorDoorStates newState() {
+            return newState;
         }
     }
 }

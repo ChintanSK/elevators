@@ -3,38 +3,55 @@ package com.cs.elevator;
 import com.cs.elevator.storey.Storey;
 import com.cs.elevator.storey.Storeys;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class ElevatorRequests {
-
+    private final LinkedBlockingQueue<Storey> liveRequestRecord = new LinkedBlockingQueue<>();
     private final ConcurrentSkipListSet<Storey> requests = new ConcurrentSkipListSet<>(Comparator.comparing(Storey::number));
 
-    public void add(String storeyCode) {
-        requests.add(Storeys.getByCode(storeyCode));
+    public void markAsServed(String storey) {
+        requests.remove(Storeys.getByCode(storey));
     }
 
-    public void remove(String storeyCode) {
-        requests.remove(Storeys.getByCode(storeyCode));
-    }
-
-    public List<Storey> getAll() {
-        return Collections.unmodifiableList(new ArrayList<>(requests));
+    public int size() {
+        return requests.size();
     }
 
     public Storey next(String storeyCode, ElevatorDirection direction) {
         Storey currentStorey = Storeys.getByCode(storeyCode);
         if (direction == ElevatorDirection.UP) {
-            return requests.ceiling(currentStorey);
+            return requests.higher(currentStorey);
         } else {
-            return requests.floor(currentStorey);
+            return requests.lower(currentStorey);
         }
     }
 
-    public boolean hasNext() {
+    public boolean hasMore() {
         return !requests.isEmpty();
+    }
+
+    public boolean contains(String storeyCode) {
+        return requests.contains(Storeys.getByCode(storeyCode));
+    }
+
+    public void enqueueRequest(Storey storey) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                liveRequestRecord.put(storey);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
+
+    public void serveNext() {
+        try {
+            requests.add(liveRequestRecord.take());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

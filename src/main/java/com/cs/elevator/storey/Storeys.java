@@ -17,4 +17,5 @@ public class Storeys {
     public static Storey getByCode(String storeyCode) {
         return storeys.get(storeyCode);
     }
+
 }

@@ -1,6 +1,7 @@
 package com.cs.elevator.hardware.buttonpanel;
 
 import com.cs.elevator.ElevatorService;
+import com.cs.elevator.storey.Storeys;
 
 public class ElevatorButtonPanel implements ElevatorButtonPanelAdapter {
 
@@ -40,7 +41,7 @@ public class ElevatorButtonPanel implements ElevatorButtonPanelAdapter {
                         if (elevatorService.elevator.isStationary() && elevatorService.currentStorey().equals(buttonCode)) {
                             elevatorService.openDoor();
                         } else {
-                            elevatorService.requests.add(buttonCode);
+                            elevatorService.requests.enqueueRequest(Storeys.getByCode(buttonCode));
                         }
                     };
             }
