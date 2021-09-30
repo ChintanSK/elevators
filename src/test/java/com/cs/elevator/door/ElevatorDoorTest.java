@@ -16,7 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.*;
-import static com.cs.elevator.door.StateTransitionMatcher.*;
+import static com.cs.elevator.StateTransitionMatcher.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;

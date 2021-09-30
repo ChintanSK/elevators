@@ -22,7 +22,7 @@ import java.util.concurrent.Callable;
 
 import static com.cs.elevator.Elevator.ElevatorStates.*;
 import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.*;
-import static com.cs.elevator.door.StateTransitionMatcher.*;
+import static com.cs.elevator.StateTransitionMatcher.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.MatcherAssert.assertThat;

@@ -1,4 +1,4 @@
-package com.cs.elevator.door;
+package com.cs.elevator;
 
 import com.cs.util.StateChangeEvent;
 import org.hamcrest.Description;
