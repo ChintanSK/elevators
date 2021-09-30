@@ -1,7 +1,7 @@
 package com.cs.elevator;
 
 import com.cs.elevator.door.ElevatorDoor;
-import com.cs.util.StateChangeEvent;
+import com.cs.elevator.util.StateChangeEvent;
 
 import java.util.ArrayList;
 import java.util.List;

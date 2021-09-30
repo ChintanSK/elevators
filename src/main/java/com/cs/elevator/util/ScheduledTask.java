@@ -1,4 +1,4 @@
-package com.cs.util;
+package com.cs.elevator.util;
 
 import java.util.concurrent.*;
 

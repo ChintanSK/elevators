@@ -2,12 +2,12 @@ package com.cs.elevator.door;
 
 import com.cs.elevator.hardware.ElevatorHardware.DoorCommandsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.DoorSignalsAdapter;
-import com.cs.util.ScheduledTask;
+import com.cs.elevator.util.ScheduledTask;
 
 import java.util.concurrent.Callable;
 
 import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.*;
-import static com.cs.util.ScheduledTask.execute;
+import static com.cs.elevator.util.ScheduledTask.execute;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ElevatorDoorService implements DoorSignalsAdapter {

@@ -2,7 +2,7 @@ package com.cs.elevator;
 
 import com.cs.elevator.storey.Storey;
 import com.cs.elevator.storey.Storeys;
-import com.cs.util.ScheduledTask;
+import com.cs.elevator.util.ScheduledTask;
 
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListSet;

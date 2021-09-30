@@ -10,7 +10,7 @@ import com.cs.elevator.hardware.ElevatorHardwareCommands;
 import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanel;
 import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanelAdapter;
 
-import static com.cs.util.ScheduledTask.execute;
+import static com.cs.elevator.util.ScheduledTask.execute;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ElevatorService implements Runnable, ElevatorSignalsAdapter, ElevatorDoorEventListener {
