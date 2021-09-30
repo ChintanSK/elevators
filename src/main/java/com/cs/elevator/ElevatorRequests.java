@@ -2,7 +2,7 @@ package com.cs.elevator;
 
 import com.cs.elevator.storey.Storey;
 import com.cs.elevator.storey.Storeys;
-import com.cs.elevator.util.ScheduledTask;
+import com.cs.elevator.util.AsyncTaskUtils;
 
 import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListSet;
@@ -38,17 +38,10 @@ public class ElevatorRequests {
     }
 
     public void enqueueRequest(Storey storey) {
-        ScheduledTask.execute(() -> {
-            liveRequestRecord.put(storey);
-            return null;
-        }).now();
+        AsyncTaskUtils.executeAsync(() -> liveRequestRecord.put(storey)).now();
     }
 
-    public void serveNext() {
-        try {
-            requests.add(liveRequestRecord.take());
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+    public void serveNext() throws InterruptedException {
+        requests.add(liveRequestRecord.take());
     }
 }

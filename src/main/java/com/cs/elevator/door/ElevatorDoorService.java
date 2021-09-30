@@ -2,18 +2,16 @@ package com.cs.elevator.door;
 
 import com.cs.elevator.hardware.ElevatorHardware.DoorCommandsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.DoorSignalsAdapter;
-import com.cs.elevator.util.ScheduledTask;
-
-import java.util.concurrent.Callable;
+import com.cs.elevator.util.AsyncTaskUtils;
 
 import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.*;
-import static com.cs.elevator.util.ScheduledTask.execute;
+import static com.cs.elevator.util.AsyncTaskUtils.executeAsync;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ElevatorDoorService implements DoorSignalsAdapter {
     private final ElevatorDoor door;
     private final DoorCommandsAdapter doorCommands;
-    private ScheduledTask<Void> delayedCloseDoorTask;
+    private AsyncTaskUtils<Void> delayedCloseDoorTask;
 
     public ElevatorDoorService(ElevatorDoor door, DoorCommandsAdapter doorCommands) {
         this.door = door;
@@ -25,10 +23,7 @@ public class ElevatorDoorService implements DoorSignalsAdapter {
         if (delayedCloseDoorTask != null) {
             delayedCloseDoorTask.cancel();
         }
-        delayedCloseDoorTask = execute((Callable<Void>) () -> {
-            close();
-            return null;
-        }).withDelayOf(5, SECONDS);
+        delayedCloseDoorTask = executeAsync(this::close).withDelayOf(5, SECONDS);
     }
 
     public void close() {

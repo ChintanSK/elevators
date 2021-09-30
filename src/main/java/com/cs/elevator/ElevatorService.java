@@ -9,8 +9,9 @@ import com.cs.elevator.hardware.ElevatorHardware.ElevatorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;
 import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanel;
 import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanelAdapter;
+import com.cs.elevator.util.AsyncTaskUtils;
 
-import static com.cs.elevator.util.ScheduledTask.execute;
+import static com.cs.elevator.util.AsyncTaskUtils.executeAsync;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ElevatorService implements Runnable, ElevatorSignalsAdapter, ElevatorDoorEventListener {
@@ -60,11 +61,20 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter, Elevat
     }
 
     private void startAcceptingElevatorRequests() {
-        new Thread(() -> {
+        AsyncTaskUtils.executeAsync(() -> {
             while (!stopped) {
                 requests.serveNext();
             }
-        }).start();
+        }).now();
+//        new Thread(() -> {
+//            while (!stopped) {
+//                try {
+//                    requests.serveNext();
+//                } catch (InterruptedException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//        }).start();
     }
 
     public String currentStorey() {
@@ -110,7 +120,7 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter, Elevat
 
     private boolean isDoorClosedLongEnough() {
         boolean closedASecondAgo = elevator.door.isClosed();
-        Boolean stillClosed = execute(elevator.door::isClosed).withDelayOf(2, SECONDS).andGetResult();
+        Boolean stillClosed = executeAsync(elevator.door::isClosed).withDelayOf(2, SECONDS).andGetResult();
         return closedASecondAgo && stillClosed;
     }
 }
