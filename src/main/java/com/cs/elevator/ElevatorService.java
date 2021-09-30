@@ -10,7 +10,8 @@ import com.cs.elevator.hardware.ElevatorHardwareCommands;
 import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanel;
 import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanelAdapter;
 
-import java.util.concurrent.CompletableFuture;
+import static com.cs.util.ScheduledTask.execute;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ElevatorService implements Runnable, ElevatorSignalsAdapter, ElevatorDoorEventListener {
     public final Elevator elevator;
@@ -99,22 +100,17 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter, Elevat
     @Override
     public void onDoorStatusChange(ElevatorDoor.ElevatorDoorStateChangeEvent event) {
         if (ElevatorDoorStates.CLOSED.equals(event.newState())) {
-            try {
-                if (isDoorClosedLongEnough()) {
-                    elevator.makeStationary();
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
+            if (isDoorClosedLongEnough()) {
+                elevator.makeStationary();
             }
         } else {
             elevator.makeServing();
         }
     }
 
-    private boolean isDoorClosedLongEnough() throws InterruptedException {
+    private boolean isDoorClosedLongEnough() {
         boolean closedASecondAgo = elevator.door.isClosed();
-        Thread.sleep(2000L);
-        boolean stillClosed = elevator.door.isClosed();
+        Boolean stillClosed = execute(elevator.door::isClosed).withDelayOf(2, SECONDS).andGetResult();
         return closedASecondAgo && stillClosed;
     }
 }

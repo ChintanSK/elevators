@@ -9,6 +9,7 @@ import com.cs.elevator.hardware.ElevatorHardware.ElevatorCommandsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.ElevatorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;
 import com.cs.elevator.storey.Storeys;
+import org.hamcrest.Matcher;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -17,12 +18,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 
 import static com.cs.elevator.Elevator.ElevatorStates.*;
 import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.*;
 import static com.cs.elevator.door.StateTransitionMatcher.*;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.awaitility.Awaitility.await;
 import static org.awaitility.Awaitility.with;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
@@ -89,7 +90,7 @@ class ElevatorTest {
         assertThat(elevatorService.currentStorey(), is("GROUND"));
         assertThat(elevator.isServing(), is(true));
         assertThat(elevator.door.isOpen(), is(true));
-        await().until(() -> elevator.isStationary());
+        waitUntil(() -> elevator.currentState(), is(STATIONARY));
         verify(elevatorDoorEventListener, times(4)).onDoorStatusChange(elevatorDoorStateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> elevatorDoorStateChangeEvents = elevatorDoorStateChangeEvent.getAllValues();
         assertThat(elevatorDoorStateChangeEvents.get(0), is(transitioning(from(CLOSED), to(OPENING))));
@@ -111,8 +112,7 @@ class ElevatorTest {
         elevatorService.buttonPanel.buttonPressed("2");
         elevatorService.buttonPanel.buttonPressed("3");
 
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevatorService.requests.size(), is(3));
+        waitUntil(() -> elevatorService.requests.size(), is(3));
         assertThat(elevatorService.requests.contains("1"), is(true));
         assertThat(elevatorService.requests.contains("2"), is(true));
         assertThat(elevatorService.requests.contains("3"), is(true));
@@ -127,12 +127,11 @@ class ElevatorTest {
 
         elevatorService.buttonPanel.buttonPressed("3");
 
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevator.currentState(), is(MOVING));
+        waitUntil(() -> elevator.currentState(), is(MOVING));
         verify(elevatorHardwareCommands, times(1)).moveUp();
         elevatorApproaching("1", "2", "3");
 
-        await().until(() -> elevatorService.currentStorey(), is("3"));
+        waitUntil(() -> elevatorService.currentStorey(), is("3"));
         verify(elevatorHardwareCommands, times(1)).stop("3");
         verify(elevatorEventListener, times(2)).onElevatorStatusChange(elevatorStateChangeEvent.capture());
         List<ElevatorStateChangeEvent> elevatorStateChangeEvents = elevatorStateChangeEvent.getAllValues();
@@ -149,12 +148,11 @@ class ElevatorTest {
 
         elevatorService.buttonPanel.buttonPressed("1");
 
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevator.currentState(), is(MOVING));
+        waitUntil(() -> elevator.currentState(), is(MOVING));
         verify(elevatorHardwareCommands, times(1)).moveDown();
         elevatorApproaching("2", "1");
 
-        await().until(() -> elevatorService.currentStorey(), is("1"));
+        waitUntil(() -> elevatorService.currentStorey(), is("1"));
         verify(elevatorHardwareCommands, times(1)).stop("1");
         verify(elevatorEventListener, times(2)).onElevatorStatusChange(elevatorStateChangeEvent.capture());
         List<ElevatorStateChangeEvent> elevatorStateChangeEvents = elevatorStateChangeEvent.getAllValues();
@@ -163,47 +161,57 @@ class ElevatorTest {
     }
 
     @Test
-    @DisplayName("Elevator serves lower storeys after all requested upper storeys are served")
-    public void testElevatorServesLowerStoreysAfterUpperStoreysAreServed() {
+    @DisplayName("An up going Elevator serves upper storeys and then comes back for lower storeys")
+    public void testUpGoingElevatorServesUpperStoreysAndThenLowerStoreys() {
         setUpDoorOpenAction();
         setUpDoorClosedAction();
         setUpStationaryElevatorAt("GROUND");
         setUpElevatorMoveUpAction();
         setUpElevatorMoveDownAction();
-        setUpElevatorStopAction("2", "3", "1");
+        setUpElevatorStopAction("3", "1");
 
-        assertThat(elevator.currentState(), is(STATIONARY));
-        assertThat(elevatorService.currentStorey(), is("GROUND"));
-
-        elevatorService.buttonPanel.buttonPressed("2");
         elevatorService.buttonPanel.buttonPressed("3");
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevator.currentState(), is(MOVING));
+        waitUntil(() -> elevator.currentState(), is(MOVING));
+        elevatorApproaching("1", "2");
         elevatorService.buttonPanel.buttonPressed("1");
 
+        assertThatElevatorIsServing("3");
+
+        waitUntil(() -> elevator.currentState(), is(MOVING));
         elevatorApproaching("2");
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevator.currentState(), is(SERVING));
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevator.door.isClosed());
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevator.currentState(), is(MOVING));
-        verify(elevatorHardwareCommands, times(2)).moveUp();
 
-        elevatorApproaching("3");
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevator.currentState(), is(SERVING));
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevator.door.isClosed());
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevator.currentState(), is(MOVING));
+        assertThatElevatorIsServing("1");
+
+        waitUntil(() -> elevator.currentState(), is(STATIONARY));
+        verify(elevatorHardwareCommands, times(1)).moveUp();
         verify(elevatorHardwareCommands, times(1)).moveDown();
+    }
 
+    @Test
+    @DisplayName("A down going Elevator serves lower storeys and then comes back for upper storeys")
+    public void testDownGoingElevatorServesLowerStoreysAndThenUpperStoreys() {
+        setUpDoorOpenAction();
+        setUpDoorClosedAction();
+        setUpStationaryElevatorAt("3");
+        setUpElevatorMoveUpAction();
+        setUpElevatorMoveDownAction();
+        setUpElevatorStopAction("GROUND", "2");
+
+        elevatorService.buttonPanel.buttonPressed("GROUND");
+        waitUntil(() -> elevator.currentState(), is(MOVING));
         elevatorApproaching("2", "1");
-        with().pollInterval(1, SECONDS)
-                .await().until(() -> elevator.currentState(), is(STATIONARY));
+        elevatorService.buttonPanel.buttonPressed("2");
 
-        assertThat(elevatorService.currentStorey(), is("1"));
+        assertThatElevatorIsServing("GROUND");
+
+        waitUntil(() -> elevator.currentState(), is(MOVING));
+        elevatorApproaching("1");
+
+        assertThatElevatorIsServing("2");
+
+        waitUntil(() -> elevator.currentState(), is(STATIONARY));
+        verify(elevatorHardwareCommands, times(1)).moveDown();
+        verify(elevatorHardwareCommands, times(1)).moveUp();
     }
 
     private void setUpDoorOpenAction() {
@@ -213,7 +221,6 @@ class ElevatorTest {
             return null;
         }).when(doorHardwareCommands).open();
     }
-
 
     private void setUpDoorClosedAction() {
         doAnswer(invocation -> {
@@ -251,6 +258,19 @@ class ElevatorTest {
 
     private void elevatorApproaching(String... storeyCodes) {
         Arrays.stream(storeyCodes).forEach(elevatorHardwareSignals::elevatorApproachingStorey);
+    }
+
+    private <T> void waitUntil(Callable<T> conditionSupplier, Matcher<T> conditionResultMatcher) {
+        with().pollInterval(1, SECONDS)
+                .await().until(conditionSupplier, conditionResultMatcher);
+    }
+
+    private void assertThatElevatorIsServing(String storeyCode) {
+        elevatorApproaching(storeyCode);
+        waitUntil(() -> elevator.currentState(), is(SERVING));
+        assertThat(elevatorService.currentStorey(), is(storeyCode));
+        with().pollInterval(1, SECONDS)
+                .await().until(() -> elevator.door.isClosed());
     }
 
     @AfterEach

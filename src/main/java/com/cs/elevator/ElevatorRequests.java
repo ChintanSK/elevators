@@ -2,9 +2,9 @@ package com.cs.elevator;
 
 import com.cs.elevator.storey.Storey;
 import com.cs.elevator.storey.Storeys;
+import com.cs.util.ScheduledTask;
 
 import java.util.Comparator;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -38,13 +38,10 @@ public class ElevatorRequests {
     }
 
     public void enqueueRequest(Storey storey) {
-        CompletableFuture.runAsync(() -> {
-            try {
-                liveRequestRecord.put(storey);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        ScheduledTask.execute(() -> {
+            liveRequestRecord.put(storey);
+            return null;
+        }).now();
     }
 
     public void serveNext() {
