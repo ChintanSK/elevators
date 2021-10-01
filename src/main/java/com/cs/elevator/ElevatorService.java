@@ -14,7 +14,7 @@ import com.cs.elevator.util.AsyncTaskUtils;
 import static com.cs.elevator.util.AsyncTaskUtils.executeAsync;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class ElevatorService implements Runnable, ElevatorSignalsAdapter, ElevatorDoorEventListener {
+public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEventListener {
     public final Elevator elevator;
     public final ElevatorDoorService doorService;
     private final ElevatorCommandsAdapter elevatorHardwareCommands;
@@ -33,31 +33,12 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter, Elevat
     }
 
     public void start() {
-        new Thread(this).start();
+        startAcceptingElevatorRequests();
+        startServingElevatorRequests();
     }
 
     public void stop() {
         stopped = true;
-    }
-
-    @Override
-    public void run() {
-        startAcceptingElevatorRequests();
-        while (!stopped) {
-            if (requests.hasMore() && elevator.isStationary()) {
-                if (requests.next(currentStorey, direction) == null) {
-                    direction = direction.toggle();
-                }
-                switch (direction) {
-                    case UP:
-                        elevatorHardwareCommands.moveUp();
-                        break;
-                    case DOWN:
-                        elevatorHardwareCommands.moveDown();
-                        break;
-                }
-            }
-        }
     }
 
     private void startAcceptingElevatorRequests() {
@@ -66,6 +47,34 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter, Elevat
                 requests.serveNext();
             }
         }).now();
+    }
+
+    private void startServingElevatorRequests() {
+        AsyncTaskUtils.executeAsync(() -> {
+            while (!stopped) {
+                if (requests.hasMore() && elevator.isStationary()) {
+                    serveNextElevatorRequest();
+                }
+            }
+        }).now();
+    }
+
+    private void serveNextElevatorRequest() {
+        toggleDirectionIfNeeded();
+        switch (direction) {
+            case UP:
+                elevatorHardwareCommands.moveUp();
+                break;
+            case DOWN:
+                elevatorHardwareCommands.moveDown();
+                break;
+        }
+    }
+
+    private void toggleDirectionIfNeeded() {
+        if (requests.next(currentStorey, direction) == null) {
+            direction = direction.toggle();
+        }
     }
 
     public String currentStorey() {
