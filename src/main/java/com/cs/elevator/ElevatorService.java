@@ -66,15 +66,6 @@ public class ElevatorService implements Runnable, ElevatorSignalsAdapter, Elevat
                 requests.serveNext();
             }
         }).now();
-//        new Thread(() -> {
-//            while (!stopped) {
-//                try {
-//                    requests.serveNext();
-//                } catch (InterruptedException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
-//        }).start();
     }
 
     public String currentStorey() {
