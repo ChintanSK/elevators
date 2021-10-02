@@ -38,7 +38,7 @@ public class ElevatorButtonPanel implements ElevatorButtonPanelAdapter {
                     };
                 default:
                     return elevatorService -> {
-                        if (elevatorService.elevator.isStationary() && elevatorService.currentStorey().equals(buttonCode)) {
+                        if (elevatorService.isServingAt(buttonCode)) {
                             elevatorService.openDoor();
                         } else {
                             elevatorService.requests.enqueueRequest(Storeys.getByCode(buttonCode));
@@ -47,4 +47,5 @@ public class ElevatorButtonPanel implements ElevatorButtonPanelAdapter {
             }
         }
     }
+
 }

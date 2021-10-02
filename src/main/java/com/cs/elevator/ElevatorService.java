@@ -32,6 +32,10 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
         this.elevatorHardwareCommands = elevatorHardwareCommands.elevatorCommands;
     }
 
+    public boolean isServingAt(String storeyCode) {
+        return (elevator.isStationary() || elevator.isServing()) && currentStorey.equals(storeyCode);
+    }
+
     public void start() {
         startAcceptingElevatorRequests();
         startServingElevatorRequests();
