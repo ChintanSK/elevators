@@ -8,7 +8,7 @@ import java.util.Comparator;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class ElevatorRequests {
+public class ElevatorRequests implements ElevatorRequestsView {
     private final LinkedBlockingQueue<Storey> liveRequestRecord = new LinkedBlockingQueue<>();
     private final ConcurrentSkipListSet<Storey> requests = new ConcurrentSkipListSet<>(Comparator.comparing(Storey::number));
 
@@ -16,6 +16,7 @@ public class ElevatorRequests {
         requests.remove(Storeys.getByCode(storey));
     }
 
+    @Override
     public int size() {
         return requests.size();
     }
@@ -29,10 +30,12 @@ public class ElevatorRequests {
         }
     }
 
-    public boolean hasMore() {
-        return !requests.isEmpty();
+    @Override
+    public boolean empty() {
+        return requests.isEmpty();
     }
 
+    @Override
     public boolean contains(String storeyCode) {
         return requests.contains(Storeys.getByCode(storeyCode));
     }
@@ -41,7 +44,7 @@ public class ElevatorRequests {
         AsyncTaskUtils.executeAsync(() -> liveRequestRecord.put(storey)).now();
     }
 
-    public void serveNext() throws InterruptedException {
+    public void acceptNextRequest() throws InterruptedException {
         requests.add(liveRequestRecord.take());
     }
 }

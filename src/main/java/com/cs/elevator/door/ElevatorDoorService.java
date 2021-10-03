@@ -19,15 +19,19 @@ public class ElevatorDoorService implements DoorSignalsAdapter {
     }
 
     public void open() {
-        doorCommands.open();
-        if (delayedCloseDoorTask != null) {
-            delayedCloseDoorTask.cancel();
+        if (door.isClosed() || door.isClosing()) {
+            doorCommands.open();
+            if (delayedCloseDoorTask != null) {
+                delayedCloseDoorTask.cancel();
+            }
+            delayedCloseDoorTask = executeAsync(this::close).withDelayOf(5, SECONDS);
         }
-        delayedCloseDoorTask = executeAsync(this::close).withDelayOf(5, SECONDS);
     }
 
     public void close() {
-        doorCommands.close();
+        if (door.isOpen()) {
+            doorCommands.close();
+        }
     }
 
     @Override

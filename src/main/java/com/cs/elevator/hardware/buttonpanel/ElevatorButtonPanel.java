@@ -25,23 +25,15 @@ public class ElevatorButtonPanel implements ElevatorButtonPanelAdapter {
         static ElevatorButtonCommand getByCode(String buttonCode) {
             switch (buttonCode) {
                 case "OPEN":
-                    return elevatorService -> {
-                        if (elevatorService.elevator.door.isClosed() || elevatorService.elevator.door.isClosing()) {
-                            elevatorService.openDoor();
-                        }
-                    };
+                    return ElevatorService::openDoor;
                 case "CLOSE":
-                    return elevatorService -> {
-                        if (elevatorService.elevator.door.isOpen()) {
-                            elevatorService.doorService.close();
-                        }
-                    };
+                    return ElevatorService::closeDoor;
                 default:
                     return elevatorService -> {
-                        if (elevatorService.isServingAt(buttonCode)) {
+                        if (elevatorService.isAt(buttonCode)) {
                             elevatorService.openDoor();
                         } else {
-                            elevatorService.requests.enqueueRequest(Storeys.getByCode(buttonCode));
+                            elevatorService.makeElevatorRequest(Storeys.getByCode(buttonCode));
                         }
                     };
             }

@@ -9,6 +9,7 @@ import com.cs.elevator.hardware.ElevatorHardware.ElevatorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;
 import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanel;
 import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanelAdapter;
+import com.cs.elevator.storey.Storey;
 import com.cs.elevator.util.AsyncTaskUtils;
 
 import static com.cs.elevator.util.AsyncTaskUtils.executeAsync;
@@ -17,10 +18,10 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEventListener {
     public final Elevator elevator;
     public final ElevatorDoorService doorService;
-    private final ElevatorCommandsAdapter elevatorHardwareCommands;
     public final ElevatorButtonPanelAdapter buttonPanel = new ElevatorButtonPanel(this);
-    public final ElevatorRequests requests = new ElevatorRequests();
-    public ElevatorDirection direction = ElevatorDirection.UP;
+    private final ElevatorCommandsAdapter elevatorHardwareCommands;
+    private final ElevatorRequests requests = new ElevatorRequests();
+    private ElevatorDirection direction = ElevatorDirection.UP;
 
     public String currentStorey;
     private boolean stopped;
@@ -32,7 +33,7 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
         this.elevatorHardwareCommands = elevatorHardwareCommands.elevatorCommands;
     }
 
-    public boolean isServingAt(String storeyCode) {
+    public boolean isAt(String storeyCode) {
         return (elevator.isStationary() || elevator.isServing()) && currentStorey.equals(storeyCode);
     }
 
@@ -45,10 +46,14 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
         stopped = true;
     }
 
+    public void makeElevatorRequest(Storey storey) {
+        requests.enqueueRequest(storey);
+    }
+
     private void startAcceptingElevatorRequests() {
         AsyncTaskUtils.executeAsync(() -> {
             while (!stopped) {
-                requests.serveNext();
+                requests.acceptNextRequest();
             }
         }).now();
     }
@@ -56,11 +61,19 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
     private void startServingElevatorRequests() {
         AsyncTaskUtils.executeAsync(() -> {
             while (!stopped) {
-                if (requests.hasMore() && elevator.isStationary()) {
+                if (hasMoreRequests() && elevator.isStationary()) {
                     serveNextElevatorRequest();
                 }
             }
         }).now();
+    }
+
+    private boolean hasMoreRequests() {
+        return !requests.empty();
+    }
+
+    public boolean hasNoMoreRequests() {
+        return requests.empty();
     }
 
     private void serveNextElevatorRequest() {
@@ -77,12 +90,24 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
 
     private void toggleDirectionIfNeeded() {
         if (requests.next(currentStorey, direction) == null) {
-            direction = direction.toggle();
+            toggleDirection();
         }
+    }
+
+    public void toggleDirection() {
+        direction = direction.toggle();
+    }
+
+    public ElevatorDirection direction() {
+        return direction;
     }
 
     public String currentStorey() {
         return currentStorey;
+    }
+
+    public ElevatorRequestsView requests() {
+        return requests;
     }
 
     @Override
@@ -109,6 +134,10 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
         if (!elevator.isMoving()) {
             doorService.open();
         }
+    }
+
+    public void closeDoor() {
+        doorService.close();
     }
 
     @Override
