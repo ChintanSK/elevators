@@ -41,7 +41,7 @@ public class StoreyButtonPanelTest {
     @BeforeEach
     public void initElevator() {
         Elevator elevator = new Elevator();
-        ElevatorService elevatorService = new ElevatorService(elevator, new ElevatorHardwareCommands(elevatorHardwareCommands, doorHardwareCommands));
+        ElevatorService elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorHardwareCommands, doorHardwareCommands));
         storeyButtonPanel = new StoreyButtonPanel(elevatorService);
         ElevatorSignalsAdapter elevatorHardwareSignals = elevatorService;
         DoorSignalsAdapter doorHardwareSignals = elevatorService.doorService;

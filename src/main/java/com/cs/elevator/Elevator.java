@@ -11,11 +11,7 @@ import static com.cs.elevator.Elevator.ElevatorStates.*;
 public class Elevator {
     private final List<ElevatorEventListener> elevatorEventListeners = new ArrayList<>();
     public final ElevatorState state = new ElevatorState(STATIONARY);
-    public final ElevatorDoor door;
-
-    public Elevator() {
-        this.door = new ElevatorDoor();
-    }
+    public final ElevatorDoor door = new ElevatorDoor();
 
     public void registerElevatorStateChangeListener(ElevatorEventListener listener) {
         elevatorEventListeners.add(listener);

@@ -16,7 +16,7 @@ import static com.cs.elevator.util.AsyncTaskUtils.executeAsync;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEventListener {
-    public final Elevator elevator;
+    public final Elevator elevator = new Elevator();
     public final ElevatorDoorService doorService;
     public final ElevatorButtonPanelAdapter buttonPanel = new ElevatorButtonPanel(this);
     private final ElevatorCommandsAdapter elevatorHardwareCommands;
@@ -26,8 +26,7 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
     public String currentStorey;
     private boolean stopped;
 
-    public ElevatorService(Elevator elevator, ElevatorHardwareCommands elevatorHardwareCommands) {
-        this.elevator = elevator;
+    public ElevatorService(ElevatorHardwareCommands elevatorHardwareCommands) {
         elevator.door.registerElevatorDoorEventListener(this);
         doorService = new ElevatorDoorService(elevator.door, elevatorHardwareCommands.doorCommands);
         this.elevatorHardwareCommands = elevatorHardwareCommands.elevatorCommands;

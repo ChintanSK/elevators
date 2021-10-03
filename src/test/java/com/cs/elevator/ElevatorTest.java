@@ -60,7 +60,7 @@ class ElevatorTest {
         elevator = new Elevator();
         elevator.registerElevatorStateChangeListener(elevatorEventListener);
         elevator.door.registerElevatorDoorEventListener(elevatorDoorEventListener);
-        elevatorService = new ElevatorService(elevator, new ElevatorHardwareCommands(elevatorHardwareCommands, doorHardwareCommands));
+        elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorHardwareCommands, doorHardwareCommands));
         elevatorStateChangeEvent = ArgumentCaptor.forClass(ElevatorStateChangeEvent.class);
         elevatorDoorStateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
         ElevatorSignalsAdapter elevatorHardwareSignals = elevatorService;

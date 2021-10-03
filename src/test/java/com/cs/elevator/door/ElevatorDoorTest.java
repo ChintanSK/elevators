@@ -45,7 +45,7 @@ class ElevatorDoorTest {
     public void initElevator() {
         elevator = new Elevator();
         elevator.door.registerElevatorDoorEventListener(elevatorDoorEventListener);
-        elevatorService = new ElevatorService(elevator, new ElevatorHardwareCommands(elevatorCommands, doorCommands));
+        elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorCommands, doorCommands));
         doorHardwareSignals = elevatorService.doorService;
         setUp = testUtilsFor(elevatorService).withDoorControls(doorHardwareSignals, doorCommands);
     }
