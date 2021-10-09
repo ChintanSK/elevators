@@ -8,7 +8,8 @@ import com.cs.elevator.hardware.ElevatorHardware.ElevatorSignalsAdapter;
 
 import java.util.Arrays;
 
-import static com.cs.elevator.Elevator.ElevatorStates.*;
+import static com.cs.elevator.Elevator.ElevatorStates.MOVING;
+import static com.cs.elevator.Elevator.ElevatorStates.SERVING;
 import static com.cs.elevator.ElevatorDirection.DOWN;
 import static com.cs.elevator.ElevatorDirection.UP;
 import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.CLOSED;
@@ -100,30 +101,16 @@ public class ElevatorTestUtils implements TestSetUp, TestAssertions {
         }).when(elevatorHardwareCommands).stop(argThat(is(oneOf(storeyCodes))));
     }
 
-    public void elevatorIsMoving() {
-        assertThat(elevatorService.elevator::currentState, eventually(is(MOVING)));
-    }
-
     @Override
-    public void elevatorDirectionIsUp() {
+    public void elevatorIsMovingUp() {
+        assertThat(elevatorService.elevator::currentState, eventually(is(MOVING)));
         assertThat(elevatorService.direction(), is(UP));
     }
 
     @Override
-    public void elevatorIsMovingUp() {
-        elevatorIsMoving();
-        elevatorDirectionIsUp();
-    }
-
-    @Override
-    public void elevatorDirectionIsDown() {
-        assertThat(elevatorService.direction(), is(DOWN));
-    }
-
-    @Override
     public void elevatorIsMovingDown() {
-        elevatorIsMoving();
-        elevatorDirectionIsDown();
+        assertThat(elevatorService.elevator::currentState, eventually(is(MOVING)));
+        assertThat(elevatorService.direction(), is(DOWN));
     }
 
     @Override

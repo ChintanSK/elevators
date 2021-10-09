@@ -4,11 +4,7 @@ public interface TestAssertions {
 
     void elevatorIsMovingUp();
 
-    void elevatorDirectionIsUp();
-
     void elevatorIsMovingDown();
-
-    void elevatorDirectionIsDown();
 
     void elevatorIsServingAtStorey(String storeyCode);
 

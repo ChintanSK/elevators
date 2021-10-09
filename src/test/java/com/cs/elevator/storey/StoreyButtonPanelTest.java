@@ -18,12 +18,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import static com.cs.elevator.ElevatorDirection.DOWN;
+import static com.cs.elevator.ElevatorDirection.UP;
 import static com.cs.elevator.util.ElevatorTestUtils.testUtilsFor;
 import static com.cs.elevator.util.TestSetUp.andThen;
 import static com.cs.elevator.util.TestSetUp.createStoreys;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.is;
 
 @ExtendWith(MockitoExtension.class)
 public class StoreyButtonPanelTest {
+    private ElevatorService elevatorService;
     @Mock
     private ElevatorCommandsAdapter elevatorHardwareCommands;
     @Mock
@@ -39,7 +44,7 @@ public class StoreyButtonPanelTest {
 
     @BeforeEach
     public void initElevator() {
-        ElevatorService elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorHardwareCommands, doorHardwareCommands));
+        elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorHardwareCommands, doorHardwareCommands));
         storeyButtonPanel = new StoreyButtonPanel(elevatorService);
         ElevatorSignalsAdapter elevatorHardwareSignals = elevatorService;
         DoorSignalsAdapter doorHardwareSignals = elevatorService.doorService;
@@ -90,7 +95,7 @@ public class StoreyButtonPanelTest {
         storeyButtonPanel.upButtonPressed("2");
 
         assertThat.elevatorIsServingAtStorey("2");
-        assertThat.elevatorDirectionIsUp();
+        assertThat(elevatorService.direction(), is(UP));
     }
 
     @Test
@@ -102,6 +107,6 @@ public class StoreyButtonPanelTest {
         storeyButtonPanel.downButtonPressed("2");
 
         assertThat.elevatorIsServingAtStorey("2");
-        assertThat.elevatorDirectionIsDown();
+        assertThat(elevatorService.direction(), is(DOWN));
     }
 }
