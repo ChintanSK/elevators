@@ -20,11 +20,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.List;
 
 import static com.cs.elevator.Elevator.ElevatorStates.*;
-import static com.cs.elevator.StateTransitionMatcher.*;
 import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.*;
+import static com.cs.elevator.util.AsyncMatcher.eventually;
 import static com.cs.elevator.util.ElevatorTestUtils.testUtilsFor;
+import static com.cs.elevator.util.StateTransitionMatcher.*;
 import static com.cs.elevator.util.TestSetUp.andThen;
-import static com.cs.elevator.util.TestSetUp.then;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.Mockito.times;
@@ -57,10 +57,10 @@ class ElevatorTest {
 
     @BeforeEach
     public void initElevator() {
-        elevator = new Elevator();
+        elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorHardwareCommands, doorHardwareCommands));
+        elevator = elevatorService.elevator;
         elevator.registerElevatorStateChangeListener(elevatorEventListener);
         elevator.door.registerElevatorDoorEventListener(elevatorDoorEventListener);
-        elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorHardwareCommands, doorHardwareCommands));
         elevatorStateChangeEvent = ArgumentCaptor.forClass(ElevatorStateChangeEvent.class);
         elevatorDoorStateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
         ElevatorSignalsAdapter elevatorHardwareSignals = elevatorService;
@@ -91,7 +91,7 @@ class ElevatorTest {
         assertThat(elevatorService.currentStorey(), is("GROUND"));
         assertThat(elevator.isServing(), is(true));
         assertThat(elevator.door.isOpen(), is(true));
-        assertThat.elevatorIsStationary();
+        assertThat(elevatorService.elevator::currentState, eventually(is(STATIONARY)));
         verify(elevatorDoorEventListener, times(4)).onDoorStatusChange(elevatorDoorStateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> elevatorDoorStateChangeEvents = elevatorDoorStateChangeEvent.getAllValues();
         assertThat(elevatorDoorStateChangeEvents.get(0), is(transitioning(from(CLOSED), to(OPENING))));
@@ -113,31 +113,10 @@ class ElevatorTest {
         elevatorService.buttonPanel.buttonPressed("2");
         elevatorService.buttonPanel.buttonPressed("3");
 
-        TestAssertions.waitUntil(() -> elevatorService.requests().size(), is(3));
+        assertThat(elevatorService.requests()::size, eventually(is(3)));
         assertThat(elevatorService.requests().contains("1"), is(true));
         assertThat(elevatorService.requests().contains("2"), is(true));
         assertThat(elevatorService.requests().contains("3"), is(true));
-    }
-
-    @Test
-    @DisplayName("Elevator moves up when storey button pressed")
-    public void testElevatorMovesUpWhenStoreyButtonPressed() {
-        setUp.stationaryElevatorAt("GROUND");
-        setUp.elevatorMoveUpAction();
-        setUp.elevatorStopActionAtStoreys("3");
-
-        elevatorService.buttonPanel.buttonPressed("3");
-
-        assertThat.elevatorIsMovingUp();
-        verify(elevatorHardwareCommands, times(1)).moveUp();
-        setUp.elevatorMovingToStoreys("1", then("2"), andThen("3"));
-
-        assertThat.currentStoreyIs("3");
-        verify(elevatorHardwareCommands, times(1)).stop("3");
-        verify(elevatorEventListener, times(2)).onElevatorStatusChange(elevatorStateChangeEvent.capture());
-        List<ElevatorStateChangeEvent> elevatorStateChangeEvents = elevatorStateChangeEvent.getAllValues();
-        assertThat(elevatorStateChangeEvents.get(0), is(transitioning(from(STATIONARY), to(MOVING))));
-        assertThat(elevatorStateChangeEvents.get(1), is(transitioning(from(MOVING), to(SERVING))));
     }
 
     @Test
@@ -153,7 +132,7 @@ class ElevatorTest {
         verify(elevatorHardwareCommands, times(1)).moveDown();
         setUp.elevatorMovingToStoreys("2", andThen("1"));
 
-        assertThat.currentStoreyIs("1");
+        assertThat(elevatorService::currentStorey, eventually(is("1")));
         verify(elevatorHardwareCommands, times(1)).stop("1");
         verify(elevatorEventListener, times(2)).onElevatorStatusChange(elevatorStateChangeEvent.capture());
         List<ElevatorStateChangeEvent> elevatorStateChangeEvents = elevatorStateChangeEvent.getAllValues();
@@ -183,7 +162,7 @@ class ElevatorTest {
 
         assertThat.elevatorIsServingAtStorey("1");
 
-        assertThat.elevatorIsStationary();
+        assertThat(elevatorService.elevator::currentState, eventually(is(STATIONARY)));
         verify(elevatorHardwareCommands, times(1)).moveUp();
         verify(elevatorHardwareCommands, times(1)).moveDown();
     }
@@ -210,7 +189,7 @@ class ElevatorTest {
 
         assertThat.elevatorIsServingAtStorey("2");
 
-        assertThat.elevatorIsStationary();
+        assertThat(elevatorService.elevator::currentState, eventually(is(STATIONARY)));
         verify(elevatorHardwareCommands, times(1)).moveDown();
         verify(elevatorHardwareCommands, times(1)).moveUp();
     }

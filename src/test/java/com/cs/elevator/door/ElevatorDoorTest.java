@@ -2,11 +2,11 @@ package com.cs.elevator.door;
 
 import com.cs.elevator.Elevator;
 import com.cs.elevator.ElevatorService;
-import com.cs.elevator.util.ElevatorTestUtils;
 import com.cs.elevator.door.ElevatorDoor.ElevatorDoorStateChangeEvent;
 import com.cs.elevator.hardware.ElevatorHardware;
 import com.cs.elevator.hardware.ElevatorHardware.DoorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;
+import com.cs.elevator.util.ElevatorTestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,12 +17,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 
-import static com.cs.elevator.util.ElevatorTestUtils.testUtilsFor;
-import static com.cs.elevator.StateTransitionMatcher.*;
+import static com.cs.elevator.Elevator.ElevatorStates.SERVING;
+import static com.cs.elevator.Elevator.ElevatorStates.STATIONARY;
 import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.*;
+import static com.cs.elevator.util.AsyncMatcher.eventually;
+import static com.cs.elevator.util.ElevatorTestUtils.testUtilsFor;
+import static com.cs.elevator.util.StateTransitionMatcher.*;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.notNullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -43,9 +45,9 @@ class ElevatorDoorTest {
 
     @BeforeEach
     public void initElevator() {
-        elevator = new Elevator();
-        elevator.door.registerElevatorDoorEventListener(elevatorDoorEventListener);
         elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorCommands, doorCommands));
+        elevator = elevatorService.elevator;
+        elevator.door.registerElevatorDoorEventListener(elevatorDoorEventListener);
         doorHardwareSignals = elevatorService.doorService;
         setUp = testUtilsFor(elevatorService).withDoorControls(doorHardwareSignals, doorCommands);
     }
@@ -53,9 +55,8 @@ class ElevatorDoorTest {
     @Test
     @DisplayName("Elevator is initialized correctly")
     public void testElevatorInitializedWithClosedDoor() {
-        assertThat(elevator.isStationary(), is(true));
-        assertThat(elevator.door, is(notNullValue()));
-        assertThat(elevator.door.isClosed(), is(true));
+        assertThat(elevator.currentState(), is(STATIONARY));
+        assertThat(elevator.door.currentState(), is(CLOSED));
     }
 
     @Test
@@ -63,10 +64,10 @@ class ElevatorDoorTest {
     public void testOpenButtonPressedWhenElevatorStationaryAtAStorey() {
         setUp.doorOpenAction();
 
-        assertThat(elevator.isStationary(), is(true));
+        assertThat(elevator.currentState(), is(STATIONARY));
         elevatorService.buttonPanel.buttonPressed("OPEN");
 
-        assertThat(elevator.door.isOpen(), is(true));
+        assertThat(elevator.door::currentState, eventually(is(OPEN)));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
         verify(elevatorDoorEventListener, times(2)).onDoorStatusChange(stateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> stateChangeEvents = stateChangeEvent.getAllValues();
@@ -80,10 +81,10 @@ class ElevatorDoorTest {
         setUpAnOpenDoor();
         setUp.doorClosedAction();
 
-        assertThat(elevator.isServing(), is(true));
+        assertThat(elevator.currentState(), is(SERVING));
         elevatorService.buttonPanel.buttonPressed("CLOSE");
 
-        assertThat(elevator.door.isClosed(), is(true));
+        assertThat(elevator.door::currentState, eventually(is(CLOSED)));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
         verify(elevatorDoorEventListener, times(2)).onDoorStatusChange(stateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> stateChangeEvents = stateChangeEvent.getAllValues();
@@ -96,10 +97,9 @@ class ElevatorDoorTest {
     public void testCloseButtonPressHasNoImpactWhenElevatorDoorIsOpening() {
         setUpAnOpeningDoor();
 
-        assertThat(elevator.isServing(), is(true));
         elevatorService.buttonPanel.buttonPressed("CLOSE");
 
-        assertThat(elevator.door.isOpening(), is(true));
+        assertThat(elevator.door.currentState(), is(OPENING));
         verify(elevatorDoorEventListener, times(0)).onDoorStatusChange(any(ElevatorDoorStateChangeEvent.class));
     }
 
@@ -109,10 +109,10 @@ class ElevatorDoorTest {
         setUpAClosingDoor();
         setUp.doorOpenAction();
 
-        assertThat(elevator.isServing(), is(true));
+        assertThat(elevator.currentState(), is(SERVING));
         elevatorService.buttonPanel.buttonPressed("OPEN");
 
-        assertThat(elevator.door.isOpen(), is(true));
+        assertThat(elevator.door::currentState, eventually(is(OPEN)));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
         verify(elevatorDoorEventListener, times(2)).onDoorStatusChange(stateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> stateChangeEvents = stateChangeEvent.getAllValues();
@@ -126,12 +126,13 @@ class ElevatorDoorTest {
         setUp.doorOpenAction();
         setUp.doorClosedAction();
 
-        assertThat(elevator.isStationary(), is(true));
+        assertThat(elevator.currentState(), is(STATIONARY));
         elevatorService.buttonPanel.buttonPressed("OPEN");
 
-        assertThat(elevator.door.isOpen(), is(true));
+        assertThat(elevator.door::currentState, eventually(is(OPEN)));
+        assertThat(elevator.door::currentState, eventually(is(CLOSED)));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
-        verify(elevatorDoorEventListener, timeout(6000).times(4)).onDoorStatusChange(stateChangeEvent.capture());
+        verify(elevatorDoorEventListener, timeout(3000).times(4)).onDoorStatusChange(stateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> stateChangeEvents = stateChangeEvent.getAllValues();
         assertThat(stateChangeEvents.get(0), is(transitioning(from(CLOSED), to(OPENING))));
         assertThat(stateChangeEvents.get(1), is(transitioning(from(OPENING), to(OPEN))));
@@ -145,10 +146,10 @@ class ElevatorDoorTest {
         setUpAClosingDoor();
         setUp.doorOpenAction();
 
-        assertThat(elevator.isServing(), is(true));
+        assertThat(elevator.currentState(), is(SERVING));
         doorHardwareSignals.obstacleDetected();
 
-        assertThat(elevator.door.isOpen(), is(true));
+        assertThat(elevator.door::currentState, eventually(is(OPEN)));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
         verify(elevatorDoorEventListener, times(2)).onDoorStatusChange(stateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> stateChangeEvents = stateChangeEvent.getAllValues();
@@ -160,11 +161,10 @@ class ElevatorDoorTest {
     @DisplayName("Open button, when pressed, has no impact when Elevator is moving and not stationary")
     public void testOpenButtonPressHasNoImpactWhenElevatorIsMoving() {
         elevatorService.elevatorMoving();
-        assertThat(elevator.isMoving(), is(true));
 
         elevatorService.buttonPanel.buttonPressed("OPEN");
 
-        assertThat(elevator.door.isClosed(), is(true));
+        assertThat(elevator.door.currentState(), is(CLOSED));
         verify(elevatorDoorEventListener, times(0)).onDoorStatusChange(any(ElevatorDoorStateChangeEvent.class));
     }
 

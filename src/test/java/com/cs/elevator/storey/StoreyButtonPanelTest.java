@@ -1,6 +1,5 @@
 package com.cs.elevator.storey;
 
-import com.cs.elevator.Elevator;
 import com.cs.elevator.ElevatorService;
 import com.cs.elevator.hardware.ElevatorHardware.DoorCommandsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.DoorSignalsAdapter;
@@ -40,7 +39,6 @@ public class StoreyButtonPanelTest {
 
     @BeforeEach
     public void initElevator() {
-        Elevator elevator = new Elevator();
         ElevatorService elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorHardwareCommands, doorHardwareCommands));
         storeyButtonPanel = new StoreyButtonPanel(elevatorService);
         ElevatorSignalsAdapter elevatorHardwareSignals = elevatorService;

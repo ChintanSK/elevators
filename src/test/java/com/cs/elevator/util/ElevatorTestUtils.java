@@ -11,6 +11,8 @@ import java.util.Arrays;
 import static com.cs.elevator.Elevator.ElevatorStates.*;
 import static com.cs.elevator.ElevatorDirection.DOWN;
 import static com.cs.elevator.ElevatorDirection.UP;
+import static com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates.CLOSED;
+import static com.cs.elevator.util.AsyncMatcher.eventually;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.oneOf;
@@ -99,7 +101,7 @@ public class ElevatorTestUtils implements TestSetUp, TestAssertions {
     }
 
     public void elevatorIsMoving() {
-        TestAssertions.waitUntil(elevatorService.elevator::currentState, is(MOVING));
+        assertThat(elevatorService.elevator::currentState, eventually(is(MOVING)));
     }
 
     @Override
@@ -126,19 +128,9 @@ public class ElevatorTestUtils implements TestSetUp, TestAssertions {
 
     @Override
     public void elevatorIsServingAtStorey(String storeyCode) {
-        TestAssertions.waitUntil(elevatorService.elevator::currentState, is(SERVING));
+        assertThat(elevatorService.elevator::currentState, eventually(is(SERVING)));
         assertThat(elevatorService.currentStorey(), is(storeyCode));
-        TestAssertions.waitUntil(elevatorService.elevator.door::isClosed);
-    }
-
-    @Override
-    public void elevatorIsStationary() {
-        TestAssertions.waitUntil(elevatorService.elevator::currentState, is(STATIONARY));
-    }
-
-    @Override
-    public void currentStoreyIs(String storeyCode) {
-        TestAssertions.waitUntil(elevatorService::currentStorey, is(storeyCode));
+        assertThat(elevatorService.elevator.door::currentState, eventually(is(CLOSED)));
     }
 
 }

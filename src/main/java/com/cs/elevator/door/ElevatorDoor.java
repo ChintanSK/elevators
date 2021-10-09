@@ -11,6 +11,10 @@ public class ElevatorDoor {
     private final List<ElevatorDoorEventListener> elevatorDoorEventListeners = new ArrayList<>();
     private final ElevatorDoorState state = new ElevatorDoorState(CLOSED);
 
+    public ElevatorDoorStates currentState() {
+        return state.currentState;
+    }
+
     public void registerElevatorDoorEventListener(ElevatorDoorEventListener elevatorDoorEventListener) {
         elevatorDoorEventListeners.add(elevatorDoorEventListener);
     }
@@ -24,10 +28,6 @@ public class ElevatorDoor {
     private void emitStateChangeEvent(ElevatorDoorStates oldState, ElevatorDoorStates newState) {
         ElevatorDoorStateChangeEvent stateChangeEvent = new ElevatorDoorStateChangeEvent(oldState, newState);
         elevatorDoorEventListeners.forEach(listener -> listener.onDoorStatusChange(stateChangeEvent));
-    }
-
-    public boolean isOpening() {
-        return state.currentState.equals(OPENING);
     }
 
     public boolean isOpen() {
