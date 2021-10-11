@@ -2,9 +2,7 @@ package com.cs.elevator.storey;
 
 import com.cs.elevator.ElevatorService;
 import com.cs.elevator.hardware.ElevatorHardware.DoorCommandsAdapter;
-import com.cs.elevator.hardware.ElevatorHardware.DoorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.ElevatorCommandsAdapter;
-import com.cs.elevator.hardware.ElevatorHardware.ElevatorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;
 import com.cs.elevator.storey.hardware.buttonpanel.StoreyButtonPanel;
 import com.cs.elevator.storey.hardware.buttonpanel.StoreyButtonPanelAdapter;
@@ -46,11 +44,9 @@ public class StoreyButtonPanelTest {
     public void initElevator() {
         elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorHardwareCommands, doorHardwareCommands));
         storeyButtonPanel = new StoreyButtonPanel(elevatorService);
-        ElevatorSignalsAdapter elevatorHardwareSignals = elevatorService;
-        DoorSignalsAdapter doorHardwareSignals = elevatorService.doorService;
         ElevatorTestUtils elevatorTestUtils = testUtilsFor(elevatorService)
-                .withDoorControls(doorHardwareSignals, doorHardwareCommands)
-                .withElevatorControls(elevatorHardwareSignals, elevatorHardwareCommands);
+                .withDoorControls(elevatorService.doorHardwareSignals(), doorHardwareCommands)
+                .withElevatorControls(elevatorService.elevatorHardwareSignals(), elevatorHardwareCommands);
         setUp = elevatorTestUtils;
         assertThat = elevatorTestUtils;
         elevatorService.start();

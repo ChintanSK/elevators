@@ -19,6 +19,10 @@ public class Storey implements Comparable<Storey> {
         return number;
     }
 
+    public String name() {
+        return name;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

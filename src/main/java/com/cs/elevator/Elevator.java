@@ -10,10 +10,10 @@ import static com.cs.elevator.Elevator.ElevatorStates.*;
 
 public class Elevator {
     private final List<ElevatorEventListener> elevatorEventListeners = new ArrayList<>();
-    public final ElevatorState state = new ElevatorState(STATIONARY);
-    public final ElevatorDoor door = new ElevatorDoor();
+    private final ElevatorState state = new ElevatorState(STATIONARY);
+    private final ElevatorDoor door = new ElevatorDoor();
 
-    public void registerElevatorStateChangeListener(ElevatorEventListener listener) {
+    public void registerElevatorEventListener(ElevatorEventListener listener) {
         elevatorEventListeners.add(listener);
     }
 
@@ -56,6 +56,10 @@ public class Elevator {
 
     public ElevatorStates currentState() {
         return state.currentState;
+    }
+
+    public ElevatorDoor door() {
+        return door;
     }
 
     public enum ElevatorStates {

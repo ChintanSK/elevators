@@ -1,9 +1,11 @@
 package com.cs.elevator;
 
+import com.cs.elevator.Elevator.ElevatorStates;
 import com.cs.elevator.door.ElevatorDoor;
 import com.cs.elevator.door.ElevatorDoor.ElevatorDoorStates;
 import com.cs.elevator.door.ElevatorDoorEventListener;
 import com.cs.elevator.door.ElevatorDoorService;
+import com.cs.elevator.hardware.ElevatorHardware.DoorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.ElevatorCommandsAdapter;
 import com.cs.elevator.hardware.ElevatorHardware.ElevatorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;
@@ -12,13 +14,15 @@ import com.cs.elevator.hardware.buttonpanel.ElevatorButtonPanelAdapter;
 import com.cs.elevator.storey.Storey;
 import com.cs.elevator.util.AsyncTaskUtils;
 
+import java.util.Set;
+
 import static com.cs.elevator.util.AsyncTaskUtils.executeAsync;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEventListener {
-    public final Elevator elevator = new Elevator();
-    public final ElevatorDoorService doorService;
-    public final ElevatorButtonPanelAdapter buttonPanel = new ElevatorButtonPanel(this);
+    private final Elevator elevator = new Elevator();
+    private final ElevatorDoorService doorService;
+    private final ElevatorButtonPanelAdapter buttonPanel = new ElevatorButtonPanel(this);
     private final ElevatorCommandsAdapter elevatorHardwareCommands;
     private final ElevatorRequests requests = new ElevatorRequests();
     private ElevatorDirection direction = ElevatorDirection.UP;
@@ -27,13 +31,37 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
     private boolean stopped;
 
     public ElevatorService(ElevatorHardwareCommands elevatorHardwareCommands) {
-        elevator.door.registerElevatorDoorEventListener(this);
-        doorService = new ElevatorDoorService(elevator.door, elevatorHardwareCommands.doorCommands);
+        registerElevatorDoorEventListener(this);
+        doorService = new ElevatorDoorService(elevator.door(), elevatorHardwareCommands.doorCommands);
         this.elevatorHardwareCommands = elevatorHardwareCommands.elevatorCommands;
+    }
+
+    public void registerElevatorEventListener(ElevatorEventListener elevatorEventListener) {
+        elevator.registerElevatorEventListener(elevatorEventListener);
+    }
+
+    public void registerElevatorDoorEventListener(ElevatorDoorEventListener elevatorDoorEventListener) {
+        elevator.door().registerElevatorDoorEventListener(elevatorDoorEventListener);
     }
 
     public boolean isAt(String storeyCode) {
         return (elevator.isStationary() || elevator.isServing()) && currentStorey.equals(storeyCode);
+    }
+
+    public ElevatorStates currentElevatorState() {
+        return elevator.currentState();
+    }
+
+    public ElevatorDoorStates currentElevatorDoorState() {
+        return elevator.door().currentState();
+    }
+
+    public ElevatorSignalsAdapter elevatorHardwareSignals() {
+        return this;
+    }
+
+    public DoorSignalsAdapter doorHardwareSignals() {
+        return doorService;
     }
 
     public void start() {
@@ -43,6 +71,10 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
 
     public void stop() {
         stopped = true;
+    }
+
+    public void buttonPressed(String buttonCode) {
+        buttonPanel.buttonPressed(buttonCode);
     }
 
     public void makeElevatorRequest(Storey storey) {
@@ -105,8 +137,8 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
         return currentStorey;
     }
 
-    public ElevatorRequestsView requests() {
-        return requests;
+    public Set<String> requests() {
+        return requests.view();
     }
 
     @Override
@@ -151,8 +183,8 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
     }
 
     private boolean isDoorClosedLongEnough() {
-        boolean closedASecondAgo = elevator.door.isClosed();
-        Boolean stillClosed = executeAsync(elevator.door::isClosed).withDelayOf(2, SECONDS).andGetResult();
+        boolean closedASecondAgo = elevator.door().isClosed();
+        Boolean stillClosed = executeAsync(elevator.door()::isClosed).withDelayOf(2, SECONDS).andGetResult();
         return closedASecondAgo && stillClosed;
     }
 }

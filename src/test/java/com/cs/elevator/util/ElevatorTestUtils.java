@@ -68,7 +68,6 @@ public class ElevatorTestUtils implements TestSetUp, TestAssertions {
 
     @Override
     public void stationaryElevatorAt(String storeyCode) {
-        elevatorService.elevator.makeStationary();
         elevatorService.currentStorey = storeyCode;
     }
 
@@ -103,21 +102,21 @@ public class ElevatorTestUtils implements TestSetUp, TestAssertions {
 
     @Override
     public void elevatorIsMovingUp() {
-        assertThat(elevatorService.elevator::currentState, eventually(is(MOVING)));
+        assertThat(elevatorService::currentElevatorState, eventually(is(MOVING)));
         assertThat(elevatorService.direction(), is(UP));
     }
 
     @Override
     public void elevatorIsMovingDown() {
-        assertThat(elevatorService.elevator::currentState, eventually(is(MOVING)));
+        assertThat(elevatorService::currentElevatorState, eventually(is(MOVING)));
         assertThat(elevatorService.direction(), is(DOWN));
     }
 
     @Override
     public void elevatorIsServingAtStorey(String storeyCode) {
-        assertThat(elevatorService.elevator::currentState, eventually(is(SERVING)));
+        assertThat(elevatorService::currentElevatorState, eventually(is(SERVING)));
         assertThat(elevatorService.currentStorey(), is(storeyCode));
-        assertThat(elevatorService.elevator.door::currentState, eventually(is(CLOSED)));
+        assertThat(elevatorService::currentElevatorDoorState, eventually(is(CLOSED)));
     }
 
 }

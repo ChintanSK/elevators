@@ -4,21 +4,19 @@ import com.cs.elevator.storey.Storey;
 import com.cs.elevator.storey.Storeys;
 import com.cs.elevator.util.AsyncTaskUtils;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Set;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
 
-public class ElevatorRequests implements ElevatorRequestsView {
+public class ElevatorRequests {
     private final LinkedBlockingQueue<Storey> liveRequestRecord = new LinkedBlockingQueue<>();
     private final ConcurrentSkipListSet<Storey> requests = new ConcurrentSkipListSet<>(Comparator.comparing(Storey::number));
 
     public void markAsServed(String storey) {
         requests.remove(Storeys.getByCode(storey));
-    }
-
-    @Override
-    public int size() {
-        return requests.size();
     }
 
     public Storey next(String storeyCode, ElevatorDirection direction) {
@@ -30,14 +28,16 @@ public class ElevatorRequests implements ElevatorRequestsView {
         }
     }
 
-    @Override
     public boolean empty() {
         return requests.isEmpty();
     }
 
-    @Override
     public boolean contains(String storeyCode) {
         return requests.contains(Storeys.getByCode(storeyCode));
+    }
+
+    public Set<String> view() {
+        return Collections.unmodifiableSet(requests.stream().map(Storey::name).collect(Collectors.toSet()));
     }
 
     public void enqueueRequest(Storey storey) {
