@@ -27,17 +27,7 @@ public class StoreyButtonPanel implements StoreyButtonPanelAdapter {
         void executeFor(ElevatorService elevatorService);
 
         static StoreyButtonCommand getByCode(String requestedFromStoreyCode, ElevatorDirection requestedDirection) {
-            return elevatorService -> {
-                boolean directionMatched = requestedDirection.equals(elevatorService.direction());
-                if ((directionMatched || elevatorService.hasNoMoreRequests()) && elevatorService.isAt(requestedFromStoreyCode)) {
-                    if (!directionMatched && elevatorService.hasNoMoreRequests()) {
-                        elevatorService.toggleDirection();
-                    }
-                    elevatorService.openDoor();
-                } else {
-                    elevatorService.makeElevatorRequest(Storeys.getByCode(requestedFromStoreyCode));
-                }
-            };
+            return elevatorService -> elevatorService.makeElevatorRequest(Storeys.getByCode(requestedFromStoreyCode), requestedDirection);
         }
     }
 }

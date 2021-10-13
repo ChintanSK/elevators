@@ -29,13 +29,7 @@ public class ElevatorButtonPanel implements ElevatorButtonPanelAdapter {
                 case "CLOSE":
                     return ElevatorService::closeDoor;
                 default:
-                    return elevatorService -> {
-                        if (elevatorService.isAt(buttonCode)) {
-                            elevatorService.openDoor();
-                        } else {
-                            elevatorService.makeElevatorRequest(Storeys.getByCode(buttonCode));
-                        }
-                    };
+                    return elevatorService -> elevatorService.makeElevatorRequest(Storeys.getByCode(buttonCode));
             }
         }
     }

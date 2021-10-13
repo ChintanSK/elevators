@@ -18,11 +18,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static com.cs.elevator.ElevatorDirection.DOWN;
 import static com.cs.elevator.ElevatorDirection.UP;
+import static com.cs.elevator.util.AsyncMatcher.eventually;
 import static com.cs.elevator.util.ElevatorTestUtils.testUtilsFor;
 import static com.cs.elevator.util.TestSetUp.andThen;
 import static com.cs.elevator.util.TestSetUp.createStoreys;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.atMostOnce;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 public class StoreyButtonPanelTest {
@@ -104,5 +108,21 @@ public class StoreyButtonPanelTest {
 
         assertThat.elevatorIsServingAtStorey("2");
         assertThat(elevatorService.direction(), is(DOWN));
+    }
+
+    @Test
+    public void testUpMovingElevatorAt2WithMoreUpRequestsDoesNotOpenWhenDownButtonPressedAt2() {
+        setUp.doorOpenAction();
+        setUp.doorClosedAction();
+        setUp.elevatorStopActionAtStoreys("2", "3");
+        setUp.stationaryElevatorAt("1");
+        elevatorService.buttonPressed("2");
+        elevatorService.buttonPressed("3");
+        assertThat(elevatorService::requests, eventually(hasSize(2)));
+        setUp.elevatorMovingToStoreys("2");
+        assertThat.elevatorIsServingAtStorey("2");
+
+        storeyButtonPanel.downButtonPressed("2");
+        verify(doorHardwareCommands, atMostOnce()).open();
     }
 }

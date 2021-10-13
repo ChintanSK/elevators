@@ -17,6 +17,7 @@ import com.cs.elevator.util.AsyncTaskUtils;
 import java.util.Set;
 
 import static com.cs.elevator.util.AsyncTaskUtils.executeAsync;
+import static java.util.Objects.isNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEventListener {
@@ -78,7 +79,19 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
     }
 
     public void makeElevatorRequest(Storey storey) {
-        requests.enqueueRequest(storey);
+        makeElevatorRequest(storey, null);
+    }
+
+    public void makeElevatorRequest(Storey storey, ElevatorDirection requestedDirection) {
+        boolean directionMatched = isNull(requestedDirection) || requestedDirection.equals(direction);
+        if ((directionMatched || hasNoMoreRequests()) && isAt(storey.name)) {
+            if (!directionMatched && hasNoMoreRequests()) {
+                toggleDirection();
+            }
+            openDoor();
+        } else {
+            requests.enqueueRequest(storey);
+        }
     }
 
     private void startAcceptingElevatorRequests() {
@@ -125,7 +138,7 @@ public class ElevatorService implements ElevatorSignalsAdapter, ElevatorDoorEven
         }
     }
 
-    public void toggleDirection() {
+    private void toggleDirection() {
         direction = direction.toggle();
     }
 
