@@ -9,6 +9,7 @@ import com.cs.elevator.storey.hardware.buttonpanel.StoreyButtonPanelAdapter;
 import com.cs.elevator.util.ElevatorTestUtils;
 import com.cs.elevator.util.TestAssertions;
 import com.cs.elevator.util.TestSetUp;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -124,5 +125,10 @@ public class StoreyButtonPanelTest {
 
         storeyButtonPanel.downButtonPressed("2");
         verify(doorHardwareCommands, atMostOnce()).open();
+    }
+
+    @AfterEach
+    public void stopElevator() {
+        elevatorService.stop();
     }
 }

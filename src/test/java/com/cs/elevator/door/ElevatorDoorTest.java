@@ -6,6 +6,7 @@ import com.cs.elevator.hardware.ElevatorHardware;
 import com.cs.elevator.hardware.ElevatorHardware.DoorSignalsAdapter;
 import com.cs.elevator.hardware.ElevatorHardwareCommands;
 import com.cs.elevator.util.ElevatorTestUtils;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,7 @@ class ElevatorDoorTest {
     public void initElevator() {
         elevatorService = new ElevatorService(new ElevatorHardwareCommands(elevatorCommands, doorCommands));
         elevatorService.registerElevatorDoorEventListener(elevatorDoorEventListener);
+        elevatorService.start();
         doorHardwareSignals = elevatorService.doorHardwareSignals();
         setUp = testUtilsFor(elevatorService).withDoorControls(doorHardwareSignals, doorCommands);
     }
@@ -129,7 +131,7 @@ class ElevatorDoorTest {
         assertThat(elevatorService::currentElevatorDoorState, eventually(is(OPEN)));
         assertThat(elevatorService::currentElevatorDoorState, eventually(is(CLOSED)));
         ArgumentCaptor<ElevatorDoorStateChangeEvent> stateChangeEvent = ArgumentCaptor.forClass(ElevatorDoorStateChangeEvent.class);
-        verify(elevatorDoorEventListener, timeout(3000).times(4)).onDoorStatusChange(stateChangeEvent.capture());
+        verify(elevatorDoorEventListener, timeout(4000).times(4)).onDoorStatusChange(stateChangeEvent.capture());
         List<ElevatorDoorStateChangeEvent> stateChangeEvents = stateChangeEvent.getAllValues();
         assertThat(stateChangeEvents.get(0), is(transitioning(from(CLOSED), to(OPENING))));
         assertThat(stateChangeEvents.get(1), is(transitioning(from(OPENING), to(OPEN))));
@@ -182,4 +184,8 @@ class ElevatorDoorTest {
         clearInvocations(elevatorDoorEventListener);
     }
 
+    @AfterEach
+    public void stopElevator() {
+        elevatorService.stop();
+    }
 }
