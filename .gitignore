@@ -31,6 +31,9 @@
 !.vscode/launch.json
 !.vscode/extensions.json
 
+#Java Environment Management Tool JENV
+.java-version
+
 # misc
 /.sass-cache
 /connect.lock
